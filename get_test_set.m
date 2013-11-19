@@ -23,4 +23,5 @@ function [testSet] = get_test_set(grades, queries, testableQueries, T, rank)
             break;
         end;
     end
+end
 
