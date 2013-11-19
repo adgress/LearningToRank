@@ -1,0 +1,7 @@
+Learner,Iterations,Train Set,Test Set,Number Splits,NDCG Rank
+RankSVM,25,./week8-18data/train,./week8-18data/test.local,10,5
+RankSVM,25,./week8-18data/train.local,./week8-18data/test,10,5
+ALTR Linear Kernel Chunking,10,./week8-18data/train,./week8-18data/test.local,10,5
+ALTR Linear Kernel Chunking,10,./week8-18data/train.local,./week8-18data/test,10,5
+ALTR Poly Kernel Chunking,10,./week8-18data/train,./week8-18data/test.local,10,5
+ALTR Poly Kernel Chunking,10,./week8-18data/train.local,./week8-18data/test,10,5

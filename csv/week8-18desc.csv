@@ -1,0 +1,2 @@
+Learner,Iterations,Train Set,Test Set,Number Splits,NDCG Rank
+RankSVM,25,./normalized_news_data/train,./normalized_news_data/test,10,5

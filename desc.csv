@@ -1,0 +1,3 @@
+Learner,Iterations,Train Set,Test Set,Number Splits,NDCG Rank
+RankSVM,10,./news_common_features/train.news,./news_common_features/test.news,10,5
+Relative Attributes,10,./news_common_features/train.news,./news_common_features/test.news,10,5
