@@ -3,7 +3,7 @@ function [] = run_experiments(input_dir, train_name, test_name, ...
          results_file_name, learner, input_dir_2, train_name_2, test_name_2, ...
          cvx_path)
     mystream = RandStream('mt19937ar','Seed',sum(100*clock));
-    RandStream.setDefaultStream(mystream);
+    RandStream.setGlobalStream(mystream);
 
     addpath(cvx_path);
     cvx_setup;
