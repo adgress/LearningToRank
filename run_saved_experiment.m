@@ -109,10 +109,18 @@ function [ndcg var_ndcg] = run_saved_experiment(train_fv, train_quj, ...
                     indices = testSetMap(testQueries{i});
                     y = w' * testSetX(indices, :)';
                     r = testSetY(indices)';
-                    %[y' r']
                     iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
                 end;
             end;
+            if flag == REGRESSION
+                w = train_regression(trainSetX,trainSetY);
+                for i=1:length(testQueries)
+                    indices = testSetMap(testQueries{i});
+                    y = w' * testSetX(indices, :)';
+                    r = testSetY(indices)';
+                    iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
+                end
+            end
             if (flag == ALTR_LIN)
                 % Learn on train set
                 w = train_altr_linear(trainSetX, O, S);
@@ -134,8 +142,6 @@ function [ndcg var_ndcg] = run_saved_experiment(train_fv, train_quj, ...
                     indices = testSetMap(testQueries{i});
                     y = w * testSetX(indices, :)';
                     r = testSetY(indices)';
-                    %y
-                    %r
                     iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
                 end;
             end;
@@ -156,8 +162,6 @@ function [ndcg var_ndcg] = run_saved_experiment(train_fv, train_quj, ...
                         y = [y; rank_k_rbf(x, ForKFirstArg, AB, SIGMA)];
                     end
                     r = testSetY(indices)';
-                    y'
-                    r
                     result_ndcg = compute_ndcg_rank(rank, y, r);
                     iterationNDCG(testQueries{i}) = result_ndcg;
                 end;
@@ -175,8 +179,6 @@ function [ndcg var_ndcg] = run_saved_experiment(train_fv, train_quj, ...
                         y = [y; rank_k_poly(x, support_vectors, A, d)];
                     end
                     r = testSetY(indices)';
-                    %y
-                    %r
                     result_ndcg = compute_ndcg_rank(rank, y, r);
                     iterationNDCG(testQueries{i}) = result_ndcg;
                 end;
