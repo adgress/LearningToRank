@@ -1,11 +1,11 @@
-function [] = plot_results(varargin)
+function [] = plot_results(allResults)
     figure
     hold on
     leg = {};
     symbols = {'.','+','v','x'};
     colors = {'r','g','b','c','m','y','k'};
-    for i=1:numel(varargin)
-        results = varargin{i};
+    for i=1:numel(allResults)
+        results = allResults{i};
         learner = results('learner');
         ndcg_rank = results('ndcg_rank');
         iterations = results('iterations');
