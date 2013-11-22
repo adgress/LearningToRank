@@ -1,6 +1,7 @@
-function w = ranksvm(X,y,opt)
+function model = train_regression(X,Y,opt)       
     %Turn warning off because X is going to be rank deficient
     warning off;
-    w = regress(y,X);
+    %w = regress(Y,X);
+    model = svmtrain(Y,X,'-t 0 -s 3 -q');
     warning on;
 end

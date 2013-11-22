@@ -112,12 +112,14 @@ function [ndcg var_ndcg] = run_saved_experiment(train_fv, train_quj, ...
                     iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
                 end;
             end;
-            if flag == REGRESSION
-                w = train_regression(trainSetX,trainSetY);
+            if flag == REGRESSION                
+                addpath('../libsvm-3.17/matlab');
+                model = train_regression(trainSetX,trainSetY);                
                 for i=1:length(testQueries)
                     indices = testSetMap(testQueries{i});
-                    y = w' * testSetX(indices, :)';
+                    %y = w' * testSetX(indices, :)';                    
                     r = testSetY(indices)';
+                    y = svmpredict(r',testSetX(indices,:),model,'-q');
                     iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
                 end
             end
