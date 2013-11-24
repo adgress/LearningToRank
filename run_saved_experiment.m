@@ -1,5 +1,8 @@
-function [ndcg var_ndcg] = run_saved_experiment(train_fv, train_quj, ...
-    test_fv, test_quj, queryIndexTrain, queryIndexTest, perTrainArray, rank, flag, iterations)
+function [ndcg var_ndcg] = run_saved_experiment(...
+    train_fv, train_quj, ...
+    test_fv, test_quj, ...
+    queryIndexTrain, queryIndexTest, ...
+    perTrainArray, rank, flag, iterations)
 % train_fv = path to train set .fv (features + labels)
 % train_quj = path to train set .quj (queries)
 % test_fv, test_quj = same as above, but for test set
@@ -98,8 +101,8 @@ function [ndcg var_ndcg] = run_saved_experiment(train_fv, train_quj, ...
                     r = testSetY(indices)';
                     %[y' r']
                     iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
-                end;
-            end;
+                end
+            end
             if (flag == RANKSVM || flag == RANKSVM_WEIGHTED || flag == RANKSVM_WEIGHTED_BAD)
                 % RankSVM
                 % Learn on train set
@@ -110,8 +113,8 @@ function [ndcg var_ndcg] = run_saved_experiment(train_fv, train_quj, ...
                     y = w' * testSetX(indices, :)';
                     r = testSetY(indices)';
                     iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
-                end;
-            end;
+                end
+            end
             if flag == REGRESSION                
                 addpath('../libsvm-3.17/matlab');
                 model = train_regression(trainSetX,trainSetY);                
@@ -133,8 +136,8 @@ function [ndcg var_ndcg] = run_saved_experiment(train_fv, train_quj, ...
                     y = w * testSetX(indices, :)';
                     r = testSetY(indices)';
                     iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
-                end;
-            end;
+                end
+            end
             if (flag == ALTR_LIN_CHUNKING || flag == ALTR_LIN_WEIGHTED)
                 % Learn on train set
                 w = train_altr_linear_chunking(trainSetX, O);
@@ -145,8 +148,8 @@ function [ndcg var_ndcg] = run_saved_experiment(train_fv, train_quj, ...
                     y = w * testSetX(indices, :)';
                     r = testSetY(indices)';
                     iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
-                end;
-            end;
+                end
+            end
             if (flag == ALTR_RBF_KER)
                 SIGMA = 32
                 C = 0.1;
@@ -166,8 +169,8 @@ function [ndcg var_ndcg] = run_saved_experiment(train_fv, train_quj, ...
                     r = testSetY(indices)';
                     result_ndcg = compute_ndcg_rank(rank, y, r);
                     iterationNDCG(testQueries{i}) = result_ndcg;
-                end;
-            end;
+                end
+            end
             if (flag == ALTR_POLY_KER_CHUNKING)
                 % ALTR Poly Kernel (trying alt formulation of K)
                 d = 2;
@@ -183,10 +186,10 @@ function [ndcg var_ndcg] = run_saved_experiment(train_fv, train_quj, ...
                     r = testSetY(indices)';
                     result_ndcg = compute_ndcg_rank(rank, y, r);
                     iterationNDCG(testQueries{i}) = result_ndcg;
-                end;
-            end;
+                end
+            end
             tempNDCG = [tempNDCG; mean(cell2mat(values(iterationNDCG)))];
-        end;
+        end
         ndcg = [ndcg; mean(tempNDCG)];
         var_ndcg = [var_ndcg; var(tempNDCG)];
     end;
