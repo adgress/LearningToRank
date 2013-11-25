@@ -11,8 +11,28 @@ C_S = repmat(0.1, size(S, 1), 1);
 size(O)
 size(S)
 
+%x = quadprog(H,f,A,b,Aeq,beq,lb,ub,x0,options)
 
-cvx_begin
+n1 = size(C_O,1);
+n2 = size(C_S,1);
+
+P = zeros(n1+n2,1);
+f = [ones(n1,1) ; zeros(n2,1)];
+lb = zeros(n1+n2,1);
+ub = [C_O; C_S];
+A = [];
+b = [];
+Aeq = [];
+beq = [];
+H = ([O; S] * X) * ([O; S] * X)';
+
+%{
+P = quadprog(H,-f,A,b,Aeq,beq,lb,ub,P);
+A = P(1:n1);
+B = P(n1+1:end);
+%}
+
+cvx_begin quiet
     variable A(size(C_O, 1))
     variable B(size(C_S, 1))
     % non-kernel:
@@ -21,6 +41,7 @@ cvx_begin
       0 <= A <= C_O
       0 <= B <= C_S
 cvx_end
+
 
 otherW = zeros(1, size(X, 2));
 for i = 1:numel(A)
