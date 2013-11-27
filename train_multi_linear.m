@@ -11,22 +11,14 @@ C_O_2 = repmat(0.1, size(O_2, 1), 1);
 
 M = 2; % Number of attributes. For now, fixed at 2 (local and news searches)
 
-size(O_1)
-size(TrainSet_1)
-size(O_2)
-size(TrainSet_2)
-
 padded_O_1 = [O_1 zeros(size(O_1, 1), size(TrainSet_2, 1))];
 padded_O_2 = [zeros(size(O_2, 1), size(TrainSet_1, 1)) O_2];
-
-size(padded_O_1)
-size(padded_O_2)
 
 K_full = linear_matrix([padded_O_1; padded_O_2] * [TrainSet_1; TrainSet_2]);
 K_1 = linear_matrix(O_1 * TrainSet_1);
 K_2 = linear_matrix(O_2 * TrainSet_2);
 
-cvx_begin
+cvx_begin quiet
     variable A_1(size(C_O_1, 1))
     variable A_2(size(C_O_2, 1))
 
@@ -38,7 +30,11 @@ cvx_end
 
 w_0 = zeros(1, size(TrainSet_1, 2));
 for i = 1:numel(A_1)
-    tmp = ( TrainSet_1( find(O_1(i,:) == 1), : ) - TrainSet_1( find(O_1(i, :) == -1), : ));
+    indPos = find(O_1(i,:) == 1);
+    indNeg = find(O_1(i, :) == -1);
+    xPos = TrainSet_1( indPos, :);
+    xNeg = TrainSet_1( indNeg, : );
+    tmp = ( xPos - xNeg);
     w_0 = w_0 + A_1(i) * tmp;
 end
 for i = 1:numel(A_2)

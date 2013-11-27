@@ -1,7 +1,7 @@
 function [ ndcg_1 var_ndcg_1 ndcg_2 var_ndcg_2] = ...
          run_saved_multi_experiment(train_fv_1, train_quj_1, test_fv_1, test_quj_1, queryIndexTrain_1, ...
                                     queryIndexTest_1, ...
-                                    train_fv_2, train_quj_2, test_fv_2, test_quj_2, queryIndexTrain_2,
+                                    train_fv_2, train_quj_2, test_fv_2, test_quj_2, queryIndexTrain_2, ...
                                     queryIndexTest_2, ...
                                     perTrainArray, rank, flag, iterations)
     % For explanation of variables and return values, see run_saved_experiment.m.
@@ -73,34 +73,33 @@ function [ ndcg_1 var_ndcg_1 ndcg_2 var_ndcg_2] = ...
     queryData_2 = textscan(fid,'%s %s %s %s', 'delimiter', '\t', 'HeaderLines', 1); % Group Query URL %Grade Group Query URL Grade
     fclose(fid);
     queries_2 = queryData_2{queryIndexTest_2};  
-    size(queries_2)
     testQueries_2 = unique(queries_2);
 
     % Generate map from unique test queries to all matching indices in test set
     for i = 1:length(testQueries_2)
         testSetMap_2(testQueries_2{i}) = find(strcmp(queries_2, testQueries_2{i}));
-    end;
+    end
 
     for k = 1:length(perTrainArray)
-        disp(strcat('perTrainArray index ', int2str(k)))
+        disp(strcat('perTrainArray index ', int2str(k)));
 
         tempNDCG_1 = [];
         tempNDCG_2 = [];
 
         for j = 1:iterations
-            disp(strcat('iteration ', int2str(j)))
+            disp(strcat('iteration ', int2str(j)));
 
             iterationNDCG_1 = containers.Map();
             iterationNDCG_2 = containers.Map();
 
-            numTrain_1 = floor(size(features_1, 1) * perTrainArray(k))
+            numTrain_1 = floor(size(features_1, 1) * perTrainArray(k));
             trainSetPerm_1 = randperm(size(features_1, 1));
             trainSetX_1 = features_1(trainSetPerm_1(1:numTrain_1), :);
             trainSetY_1 = labels_1(trainSetPerm_1(1:numTrain_1));
             usedQueries_1 = trainSetQueries_1(trainSetPerm_1(1:numTrain_1));
             O_1 = build_O_per_query(trainSetY_1, usedQueries_1);
 
-            numTrain_2 = floor(size(features_2, 1) * perTrainArray(k))
+            numTrain_2 = floor(size(features_2, 1) * perTrainArray(k));
             trainSetPerm_2 = randperm(size(features_2, 1));
             trainSetX_2 = features_2(trainSetPerm_2(1:numTrain_2), :);
             trainSetY_2 = labels_2(trainSetPerm_2(1:numTrain_2));
@@ -109,10 +108,9 @@ function [ ndcg_1 var_ndcg_1 ndcg_2 var_ndcg_2] = ...
 
             % Learn on train set
             lambda = 1;
+            O_1 = clampToOne(O_1);
+            O_2 = clampToOne(O_2);
             [w0 v1 v2] = train_multi_linear(trainSetX_1, O_1, trainSetX_2, O_2, lambda);
-            size(w0)
-            size(v1)
-            size(v2)
 
             % Evaluate NDCG on test set
             for i = 1:length(testQueries_1)
@@ -140,5 +138,12 @@ function [ ndcg_1 var_ndcg_1 ndcg_2 var_ndcg_2] = ...
         ndcg_2 = [ndcg_2; mean(tempNDCG_2)];
         var_ndcg_2 = [var_ndcg_2; var(tempNDCG_2)];
 
-    end;
+    end
+end
+
+function [O] = clampToOne(O)
+    posInds = O > 0;
+    negInds = O < 0;
+    O(posInds) = 1;
+    O(negInds) = -1;
 end
