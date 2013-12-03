@@ -13,7 +13,6 @@ function [] = run_experiment(config)
         C = textscan(x,'%s','delimiter','=');
         C = C{1};
         var = C{1};
-        C
         val = '';
         if length(C) > 1
             val = C{2}; 
