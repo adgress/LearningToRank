@@ -3,6 +3,7 @@ function [] = plot_results_in_directory(path)
     files = files(3:end);
     allResults = cell(numel(files),1);
     for i=1:numel(files)
+        filename = files(i).name;
         x = load([path '/' files(i).name]);
         allResults{i} = x.results;
     end
