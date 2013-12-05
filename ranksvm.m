@@ -56,7 +56,9 @@ function w = ranksvm(X_,A_,C,w,opt)
     end;
     
     [obj, grad, sv] = obj_fun_linear(w,C,out);      
-    
+    if norm(grad) < 1e-10
+        break;
+    end
     % Compute the Newton direction either by linear CG
     % Advantage of linear CG when using sparse input: the Hessian
     % is never computed explicitly.

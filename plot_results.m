@@ -3,19 +3,20 @@ function [] = plot_results(allResults)
     hold on
     leg = {};
     symbols = {'.','+','v','x'};
-    colors = {'r','g','b','c','m','y','k'};
+    %colors = {'r','g','b','c','m','y','k'};
+    colors = colormap(hsv(numel(allResults)));
     for i=1:numel(allResults)
         results = allResults{i};
         learner = results('learner');
-        ndcg_rank = results('ndcg_rank');
-        iterations = results('iterations');
+        %ndcg_rank = results('ndcg_rank');
+        %iterations = results('iterations');
         sampling_rates = results('sampling_rate');
         vars = getVariances(results);
         ndcgs = getNDCGs(results);
         average_ndcgs = sum(ndcgs,2)/size(ndcgs,2);
         average_ndcgs_var = var(ndcgs,0,2);
         errorbar(sampling_rates,average_ndcgs,average_ndcgs_var,...
-            ['-' colors{i} symbols{1}]);
+            'color',colors(i,:));
         leg{i} = learner;
     end
     legend(leg);
