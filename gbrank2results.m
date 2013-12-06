@@ -24,7 +24,7 @@ function [] = gbrank2results(file,outfile)
         results(['ndcg_' num2str(i)]) = data{i};
         results(['var_' num2str(i)]) = 0*data{i};
     end
-    results('learner') = 'GBRank numnodes=5';
+    results('learner') = 'GBRank small';
     results('sampling_rate') = [0.01:0.01:0.01*numel(data{1})];
     results('iterations') = 10;
     save(outfile,'results');

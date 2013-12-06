@@ -1,11 +1,13 @@
 function [] = plot_results_in_directory(path)
     files = dir(path);
     files = files(3:end);
-    allResults = cell(numel(files),1);
+    allResults = {};
     for i=1:numel(files)
-        filename = files(i).name;
+        if files(i).isdir
+            continue;
+        end        
         x = load([path '/' files(i).name]);
-        allResults{i} = x.results;
+        allResults{end+1} = x.results;
     end
     plot_results(allResults);
 end
