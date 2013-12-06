@@ -126,6 +126,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
                     iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
                 end
             end
+            %{
             if (flag == ALTR_LIN)
                 % Learn on train set
                 w = train_altr_linear(trainSetX, O, S);
@@ -138,9 +139,14 @@ function [ndcg var_ndcg] = run_saved_experiment(...
                     iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
                 end
             end
-            if (flag == ALTR_LIN_CHUNKING || flag == ALTR_LIN_WEIGHTED)
+            %}
+            if (flag == ALTR_LIN || flag == ALTR_LIN_CHUNKING || flag == ALTR_LIN_WEIGHTED)
                 % Learn on train set
-                w = train_altr_linear_chunking(trainSetX, O);
+                if flag == ALTR_LIN_CHUNKING
+                    w = train_altr_linear_chunking(trainSetX, O);
+                else
+                    w = train_altr_linear(trainSetX, O, S);
+                end
                 size(w);
                 % Evaluate NDCG on test set
                 for i = 1:length(testQueries)
@@ -171,17 +177,20 @@ function [ndcg var_ndcg] = run_saved_experiment(...
                     iterationNDCG(testQueries{i}) = result_ndcg;
                 end
             end
-            if (flag == ALTR_POLY_KER_CHUNKING)
-                % ALTR Poly Kernel (trying alt formulation of K)
-                d = 2;
-                [A support_vectors] = train_altr_poly_chunking(trainSetX, O, d);
+            if (flag == ALTR_POLY || flag == ALTR_POLY_KER_CHUNKING)
+                degree = 2;
+                if flag == ALTR_POLY_KER_CHUNKING
+                    [A support_vectors] = train_altr_poly_chunking(trainSetX, O, degree);
+                else
+                    [A B support_vectors] = train_altr_poly(trainSetX, O, S,degree); 
+                end
                 % Evaluate NDCG on test set
                 for i = 1:length(testQueries)
                     y = [];
                     indices = testSetMap(testQueries{i});
                     for j = 1:numel(indices)
                         x = testSetX(indices(j), :);
-                        y = [y; rank_k_poly(x, support_vectors, A, d)];
+                        y = [y; rank_k_poly(x, support_vectors, A, degree)];
                     end
                     r = testSetY(indices)';
                     result_ndcg = compute_ndcg_rank(rank, y, r);
