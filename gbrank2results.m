@@ -1,4 +1,4 @@
-function [] = gbrank2results(file,outfile)
+function [] = gbrank2results(file,outdir,outfile)
     fid = fopen(file);
     data = {};
     currSet = [];
@@ -24,9 +24,9 @@ function [] = gbrank2results(file,outfile)
         results(['ndcg_' num2str(i)]) = data{i};
         results(['var_' num2str(i)]) = 0*data{i};
     end
-    results('learner') = 'GBRank small';
+    results('learner') = ['GBRank: ' outfile];
     results('sampling_rate') = [0.01:0.01:0.01*numel(data{1})];
     results('iterations') = 10;
-    save(outfile,'results');
+    save([outdir '/' outfile],'results');
     fclose(fid);
 end
