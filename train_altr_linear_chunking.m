@@ -14,7 +14,7 @@ num_vectors = size(Xnew, 1);
 support_vectors = [];
 work_set = [];
 
-epsilon =  0.0000001;
+loadConstants();
 support_vector_margins = [];
 for i = 1:600:num_vectors
     if i + 599 < num_vectors
@@ -26,7 +26,7 @@ for i = 1:600:num_vectors
     work_set_margins = [support_vector_margins ; margins(i:top_index)];
     [K] = linear_matrix(work_set);
 
-    C_O = repmat(0.1, size(work_set, 1), 1);
+    C_O = repmat(C, size(work_set, 1), 1);
     %C_S = repmat(0.1, size(S, 1), 1);
 
     cvx_begin quiet

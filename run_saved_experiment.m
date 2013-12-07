@@ -141,12 +141,12 @@ function [ndcg var_ndcg] = run_saved_experiment(...
             end
             %}
             if (flag == ALTR_LIN || flag == ALTR_LIN_CHUNKING || flag == ALTR_LIN_WEIGHTED...
-                    || flag == ALTR_LIN_DUAL)
+                    || flag == ALTR_LIN_DUAL || flag == ALTR_LIN_NO_WEAK)
                 % Learn on train set
                 if flag == ALTR_LIN_CHUNKING
                     w = train_altr_linear_chunking(trainSetX, O);
                 else
-                    w = train_altr_linear(trainSetX, O, S,flag == ALTR_LIN_DUAL);
+                    w = train_altr_linear(trainSetX, O, S,flag == ALTR_LIN_DUAL,flag ~= ALTR_LIN_NO_WEAK);
                 end
                 size(w);
                 % Evaluate NDCG on test set

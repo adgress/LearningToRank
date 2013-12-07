@@ -15,5 +15,6 @@ function learner = get_learner_name(learner_flag)
     name_array{13} = 'RankSVM Weighted Bad';
     name_array{14} = 'Regression';
     name_array{15} = 'ALTR Linear Kernel Dual';
+    name_array{16} = 'ALTR Linear No Weakly Ordered Pairs';
     learner = name_array{learner_flag};
 end
