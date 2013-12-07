@@ -1,4 +1,4 @@
-function [A support_vectors] = train_altr_poly_chunking(X, O, d)
+function [A support_vectors] = train_altr_poly_chunking(X, O, d,C)
     % X = train features
     % O = matrix of strongly ordered pairs. Each row has one +1 and one -1. The +1 column is ranked above the -1 column.
     %    (O for ordered)
@@ -24,7 +24,7 @@ for i = 1:size_of_chunk:num_vectors
 
     [K] = poly_matrix(work_set, d);
 
-    C_O = repmat(0.1, size(work_set, 1), 1);
+    C_O = repmat(C, size(work_set, 1), 1);
 
     cvx_begin
         variable A(size(C_O, 1))

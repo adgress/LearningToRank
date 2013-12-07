@@ -2,7 +2,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
     train_fv, train_quj, ...
     test_fv, test_quj, ...
     queryIndexTrain, queryIndexTest, ...
-    perTrainArray, rank, flag, iterations)
+    perTrainArray, rank, flag, iterations,input)
 % train_fv = path to train set .fv (features + labels)
 % train_quj = path to train set .quj (queries)
 % test_fv, test_quj = same as above, but for test set
@@ -31,6 +31,9 @@ function [ndcg var_ndcg] = run_saved_experiment(...
     trainSetY = [];
     O = [];
     S = [];
+    C = input('C');
+    degree = input('degree');
+    sigma = input('sigma');
     testSetMap = containers.Map();
     % Read in train and test data
     data = importdata(train_fv, '\t', 1);
@@ -92,7 +95,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
             if (flag == RELATIVE)
                 % RankSVM with Similar Attributes
                 % Learn on train set
-                w = train_ranksvm_with_sim(trainSetX, O, S);
+                w = train_ranksvm_with_sim(trainSetX, O, S,C);
 
                 % Evaluate NDCG on test set
                 for i = 1:length(testQueries)
@@ -106,7 +109,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
             if (flag == RANKSVM || flag == RANKSVM_WEIGHTED || flag == RANKSVM_WEIGHTED_BAD)
                 % RankSVM
                 % Learn on train set
-                w = train_ranksvm(trainSetX, O, 0.1);
+                w = train_ranksvm(trainSetX, O, C);
                 % Evaluate NDCG on test set
                 for i = 1:length(testQueries)
                     indices = testSetMap(testQueries{i});
@@ -144,9 +147,9 @@ function [ndcg var_ndcg] = run_saved_experiment(...
                     || flag == ALTR_LIN_DUAL || flag == ALTR_LIN_NO_WEAK)
                 % Learn on train set
                 if flag == ALTR_LIN_CHUNKING
-                    w = train_altr_linear_chunking(trainSetX, O);
+                    w = train_altr_linear_chunking(trainSetX, O,C);
                 else
-                    w = train_altr_linear(trainSetX, O, S,flag == ALTR_LIN_DUAL,flag ~= ALTR_LIN_NO_WEAK);
+                    w = train_altr_linear(trainSetX, O, S,flag == ALTR_LIN_DUAL,flag ~= ALTR_LIN_NO_WEAK,C);
                 end
                 size(w);
                 % Evaluate NDCG on test set
@@ -157,12 +160,10 @@ function [ndcg var_ndcg] = run_saved_experiment(...
                     iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
                 end
             end
-            if (flag == ALTR_RBF_KER)
-                SIGMA = 32
-                C = 0.1;
+            if (flag == ALTR_RBF_KER)                
                 S = sparse(0, 0); % try without S
                 % ALTR RBF Kernel (trying alt formulation of K)
-                [A B] = train_altr_rbf(trainSetX, O, S, SIGMA, C);
+                [A B] = train_altr_rbf(trainSetX, O, S, sigma, C);
                 % Evaluate NDCG on test set
                 ForKFirstArg = [O; S] * trainSetX;
                 AB = [A; B];
@@ -171,7 +172,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
                     indices = testSetMap(testQueries{i});
                     for j = 1:numel(indices)
                         x = testSetX(indices(j), :);
-                        y = [y; rank_k_rbf(x, ForKFirstArg, AB, SIGMA)];
+                        y = [y; rank_k_rbf(x, ForKFirstArg, AB, sigma)];
                     end
                     r = testSetY(indices)';
                     result_ndcg = compute_ndcg_rank(rank, y, r);
@@ -179,11 +180,11 @@ function [ndcg var_ndcg] = run_saved_experiment(...
                 end
             end
             if (flag == ALTR_POLY || flag == ALTR_POLY_KER_CHUNKING)
-                degree = 2;
+                
                 if flag == ALTR_POLY_KER_CHUNKING
-                    [A support_vectors] = train_altr_poly_chunking(trainSetX, O, degree);
+                    [A support_vectors] = train_altr_poly_chunking(trainSetX, O, degree,C);
                 else
-                    [A B support_vectors] = train_altr_poly(trainSetX, O, S,degree); 
+                    [A B support_vectors] = train_altr_poly(trainSetX, O, S,degree,C); 
                 end
                 % Evaluate NDCG on test set
                 for i = 1:length(testQueries)

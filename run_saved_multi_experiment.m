@@ -3,7 +3,7 @@ function [ ndcg_1 var_ndcg_1 ndcg_2 var_ndcg_2] = ...
                                     queryIndexTest_1, ...
                                     train_fv_2, train_quj_2, test_fv_2, test_quj_2, queryIndexTrain_2, ...
                                     queryIndexTest_2, ...
-                                    perTrainArray, rank, flag, iterations)
+                                    perTrainArray, rank, flag, iterations,input)
     % For explanation of variables and return values, see run_saved_experiment.m.
     % Since this is training a multi-attribute learner (trains and tests simultaneously on 2
     % data sets), it requires an additional train/test set, and returns the NDCG scores and
@@ -52,6 +52,7 @@ function [ ndcg_1 var_ndcg_1 ndcg_2 var_ndcg_2] = ...
     trainSetX_2 = [];
     trainSetY_2 = [];
     O_2 = [];
+    C = input('C');
     testSetMap_2 = containers.Map();
     
     % Load train .fv
@@ -110,7 +111,7 @@ function [ ndcg_1 var_ndcg_1 ndcg_2 var_ndcg_2] = ...
             lambda = 1;
             O_1 = clampToOne(O_1);
             O_2 = clampToOne(O_2);
-            [w0 v1 v2] = train_multi_linear(trainSetX_1, O_1, trainSetX_2, O_2, lambda);
+            [w0 v1 v2] = train_multi_linear(trainSetX_1, O_1, trainSetX_2, O_2, lambda,C);
 
             % Evaluate NDCG on test set
             for i = 1:length(testQueries_1)

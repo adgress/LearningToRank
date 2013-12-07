@@ -1,4 +1,5 @@
-function learner = get_learner_name(learner_flag)
+function learner = get_learner_name(input)
+    learner_flag = input('learner');
     name_array = cell(10, 1);
     name_array{1} = 'Relative Attributes';
     name_array{2} = 'ALTR Linear Kernel';
@@ -16,5 +17,6 @@ function learner = get_learner_name(learner_flag)
     name_array{14} = 'Regression';
     name_array{15} = 'ALTR Linear Kernel Dual';
     name_array{16} = 'ALTR Linear No Weakly Ordered Pairs';
-    learner = name_array{learner_flag};
+    param_string = make_param_string(input);
+    learner = [name_array{learner_flag} param_string];
 end

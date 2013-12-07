@@ -1,4 +1,4 @@
-function [w_0 v_1 v_2] = train_multi_linear(TrainSet_1, O_1, TrainSet_2, O_2, lambda)
+function [w_0 v_1 v_2] = train_multi_linear(TrainSet_1, O_1, TrainSet_2, O_2, lambda,C)
     % TrainSet_1 = train set 1 features
     % O_1 = matrix of strongly ordered pairs for train set 1. Each row has one +1 and one -1.
     %    The +1 column is ranked above the -1 column (O for ordered)
@@ -6,8 +6,8 @@ function [w_0 v_1 v_2] = train_multi_linear(TrainSet_1, O_1, TrainSet_2, O_2, la
     % O_2 = matrix of strongly ordered pairs for train set 2. Same structure as O_1
     % lambda = parameter
 
-C_O_1 = repmat(0.1, size(O_1, 1), 1);
-C_O_2 = repmat(0.1, size(O_2, 1), 1);
+C_O_1 = repmat(C, size(O_1, 1), 1);
+C_O_2 = repmat(C, size(O_2, 1), 1);
 
 M = 2; % Number of attributes. For now, fixed at 2 (local and news searches)
 

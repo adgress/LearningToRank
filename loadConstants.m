@@ -15,4 +15,3 @@ ALTR_LIN_DUAL = 15;
 ALTR_LIN_NO_WEAK = 16;
 
 epsilon =  0.0000001;
-C = 0.1;

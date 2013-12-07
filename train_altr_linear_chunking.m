@@ -1,4 +1,4 @@
-function [w O S] = train_altr_linear_chunking(X, O)
+function [w O S] = train_altr_linear_chunking(X, O,C)
     % X = train features
     % O = matrix of strongly ordered pairs. Each row has one +1 and one -1. The +1 column is ranked above the -1 column.
     %    (O for ordered)

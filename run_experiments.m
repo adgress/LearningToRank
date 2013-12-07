@@ -1,13 +1,13 @@
 function [] = run_experiments(input_dir, train_name, test_name, ...
          num_train_test_splits, iterations, ndcg_rank, sampling_rate, output_dir, ...
          results_file_name, learner, input_dir_2, train_name_2, test_name_2, ...
-         cvx_path)
+         cvx_path,input)
     mystream = RandStream('mt19937ar','Seed',sum(100*clock));
     RandStream.setGlobalStream(mystream);
 
     addpath(cvx_path);
     cvx_setup;
-    learner_name = get_learner_name(learner);
+    learner_name = get_learner_name(input);
     results = containers.Map();
     results('learner') = learner_name;
     results('train_set') = strcat(input_dir, train_name);
@@ -43,7 +43,7 @@ function [] = run_experiments(input_dir, train_name, test_name, ...
             [temp_ndcg temp_var temp_ndcg_2 temp_var_2] = run_saved_multi_experiment(train_fv, train_quj, ...
                                        test_fv, test_quj, queryIndexTrain, queryIndexTest, train_fv_2, train_quj_2, ...
                                        test_fv_2, test_quj_2, queryIndexTrain_2, queryIndexTest_2, sampling_rate, ...
-                                       ndcg_rank, learner, iterations);
+                                       ndcg_rank, learner, iterations,input);
             results(strcat('ndcg_', i_str)) = temp_ndcg;
             results(strcat('var_', i_str)) = temp_var;
             results(strcat('ndcg2_', i_str)) = temp_ndcg_2;
@@ -51,7 +51,7 @@ function [] = run_experiments(input_dir, train_name, test_name, ...
         else
             [temp_ndcg temp_var] = run_saved_experiment(train_fv, train_quj, test_fv, ...
                                        test_quj, queryIndexTrain, queryIndexTest, sampling_rate, ndcg_rank, ...
-                                       learner, iterations);
+                                       learner, iterations,input);
             results(strcat('ndcg_', i_str)) = temp_ndcg;
             results(strcat('var_', i_str)) = temp_var;
         end;
