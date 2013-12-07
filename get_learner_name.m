@@ -14,5 +14,6 @@ function learner = get_learner_name(learner_flag)
     name_array{12} = 'ALTR LKC Weighted';
     name_array{13} = 'RankSVM Weighted Bad';
     name_array{14} = 'Regression';
+    name_array{15} = 'ALTR Linear Kernel Dual';
     learner = name_array{learner_flag};
 end
