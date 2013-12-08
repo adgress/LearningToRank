@@ -31,9 +31,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
     trainSetY = [];
     O = [];
     S = [];
-    C = input('C');
-    degree = input('degree');
-    sigma = input('sigma');
+    
     testSetMap = containers.Map();
     % Read in train and test data
     data = importdata(train_fv, '\t', 1);
@@ -57,151 +55,174 @@ function [ndcg var_ndcg] = run_saved_experiment(...
     end;
     %TODO: Make this less hacky by using different seeds each time the experiment suite is run
     stream = RandStream('mt19937ar','Seed',10);
+    
+
+    if matlabpool('size') < 4
+        matlabpool(4);
+    end    
+    tic;
     for k = 1:length(perTrainArray)
         disp(strcat('perTrainArray index ', int2str(k)))
-        tempNDCG = [];
-        for j = 1:iterations
+        tempNDCG = zeros(iterations,1); 
+        numTrain = floor(size(features, 1) * perTrainArray(k));
+        parfor j = 1:iterations        
+        %for j = 1:iterations
             disp(strcat('iteration ', int2str(j)))
-
-            iterationNDCG = containers.Map();
-            if (flag == RANDOM)
-                % Random Ordering NDCG
-                % Evaluate NDCG on test set
-                for i = 1:length(testQueries)
-                    indices = testSetMap(testQueries{i});
-                    y = randperm(length(indices));
-                    r = testSetY(indices)';
-                    iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
-                end;
-                tempNDCG = [tempNDCG; mean(cell2mat(values(iterationNDCG)))];
-                continue;
-            end;
-            numTrain = floor(size(features, 1) * perTrainArray(k));
-            %display(numTrain);
-            trainSetPerm = randperm(stream,size(features, 1));
-            trainSetX = features(trainSetPerm(1:numTrain), :);
-            trainSetY = labels(trainSetPerm(1:numTrain));
-            usedQueries = trainSetQueries(trainSetPerm(1:numTrain));
-            O = build_O_per_query(trainSetY, usedQueries);
-            S = build_S_per_query(trainSetY, usedQueries);
-
-            %Only use weighted constraints for weighted RankSVM
-            if flag ~= RANKSVM_WEIGHTED && flag ~= ALTR_LIN_WEIGHTED && flag ~= RANKSVM_WEIGHTED_BAD
-                O = sign(O);
-            end
-            if flag == RANKSVM_WEIGHTED_BAD
-                O = -O;
-            end
-            if (flag == RELATIVE)
-                % RankSVM with Similar Attributes
-                % Learn on train set
-                w = train_ranksvm_with_sim(trainSetX, O, S,C);
-
-                % Evaluate NDCG on test set
-                for i = 1:length(testQueries)
-                    indices = testSetMap(testQueries{i});
-                    y = w' * testSetX(indices, :)';
-                    r = testSetY(indices)';
-                    %[y' r']
-                    iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
-                end
-            end
-            if (flag == RANKSVM || flag == RANKSVM_WEIGHTED || flag == RANKSVM_WEIGHTED_BAD)
-                % RankSVM
-                % Learn on train set
-                w = train_ranksvm(trainSetX, O, C);
-                % Evaluate NDCG on test set
-                for i = 1:length(testQueries)
-                    indices = testSetMap(testQueries{i});
-                    y = w' * testSetX(indices, :)';
-                    r = testSetY(indices)';
-                    iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
-                end
-            end
-            if flag == REGRESSION                
-                addpath('../libsvm-3.17/matlab');
-                model = train_regression(trainSetX,trainSetY);                
-                for i=1:length(testQueries)
-                    indices = testSetMap(testQueries{i});
-                    %y = w' * testSetX(indices, :)';                    
-                    r = testSetY(indices)';
-                    y = svmpredict(r',testSetX(indices,:),model,'-q');
-                    iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
-                end
-            end
-            %{
-            if (flag == ALTR_LIN)
-                % Learn on train set
-                w = train_altr_linear(trainSetX, O, S);
-                size(w);
-                % Evaluate NDCG on test set
-                for i = 1:length(testQueries)
-                    indices = testSetMap(testQueries{i});
-                    y = w * testSetX(indices, :)';
-                    r = testSetY(indices)';
-                    iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
-                end
-            end
-            %}
-            if (flag == ALTR_LIN || flag == ALTR_LIN_CHUNKING || flag == ALTR_LIN_WEIGHTED...
-                    || flag == ALTR_LIN_DUAL || flag == ALTR_LIN_NO_WEAK)
-                % Learn on train set
-                if flag == ALTR_LIN_CHUNKING
-                    w = train_altr_linear_chunking(trainSetX, O,C);
-                else
-                    w = train_altr_linear(trainSetX, O, S,flag == ALTR_LIN_DUAL,flag ~= ALTR_LIN_NO_WEAK,C);
-                end
-                size(w);
-                % Evaluate NDCG on test set
-                for i = 1:length(testQueries)
-                    indices = testSetMap(testQueries{i});
-                    y = w * testSetX(indices, :)';
-                    r = testSetY(indices)';
-                    iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
-                end
-            end
-            if (flag == ALTR_RBF_KER)                
-                S = sparse(0, 0); % try without S
-                % ALTR RBF Kernel (trying alt formulation of K)
-                [A B] = train_altr_rbf(trainSetX, O, S, sigma, C);
-                % Evaluate NDCG on test set
-                ForKFirstArg = [O; S] * trainSetX;
-                AB = [A; B];
-                for i = 1:length(testQueries)
-                    y = [];
-                    indices = testSetMap(testQueries{i});
-                    for j = 1:numel(indices)
-                        x = testSetX(indices(j), :);
-                        y = [y; rank_k_rbf(x, ForKFirstArg, AB, sigma)];
-                    end
-                    r = testSetY(indices)';
-                    result_ndcg = compute_ndcg_rank(rank, y, r);
-                    iterationNDCG(testQueries{i}) = result_ndcg;
-                end
-            end
-            if (flag == ALTR_POLY || flag == ALTR_POLY_KER_CHUNKING)
-                
-                if flag == ALTR_POLY_KER_CHUNKING
-                    [A support_vectors] = train_altr_poly_chunking(trainSetX, O, degree,C);
-                else
-                    [A B support_vectors] = train_altr_poly(trainSetX, O, S,degree,C); 
-                end
-                % Evaluate NDCG on test set
-                for i = 1:length(testQueries)
-                    y = [];
-                    indices = testSetMap(testQueries{i});
-                    for j = 1:numel(indices)
-                        x = testSetX(indices(j), :);
-                        y = [y; rank_k_poly(x, support_vectors, A, degree)];
-                    end
-                    r = testSetY(indices)';
-                    result_ndcg = compute_ndcg_rank(rank, y, r);
-                    iterationNDCG(testQueries{i}) = result_ndcg;
-                end
-            end
-            tempNDCG = [tempNDCG; mean(cell2mat(values(iterationNDCG)))];
+            
+            %tempNDCG = [tempNDCG; mean(cell2mat(values(iterationNDCG)))];
+            %tempNDCG(j) = mean(cell2mat(values(iterationNDCG)));
+            tempNDCG(j) = runSingleIteration(features,labels,trainSetQueries,...
+                testSetX,testSetY,testQueries,testSetMap,input,numTrain,stream,flag,rank);
         end
         ndcg = [ndcg; mean(tempNDCG)];
         var_ndcg = [var_ndcg; var(tempNDCG)];
-    end;
+    end
+    display(toc)
 end
+
+function [meanNDCG] = runSingleIteration(features,labels,trainSetQueries,...
+    testSetX,testSetY,testQueries,testSetMap,input,numTrain,stream,flag,rank)
+    loadConstants();
+    C = input('C');
+    degree = input('degree');
+    sigma = input('sigma');
+    iterationNDCG = containers.Map();
+    if (flag == RANDOM)
+        % Random Ordering NDCG
+        % Evaluate NDCG on test set
+        for i = 1:length(testQueries)
+            indices = testSetMap(testQueries{i});
+            y = randperm(length(indices));
+            r = testSetY(indices)';
+            iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
+        end;
+        %tempNDCG = [tempNDCG; mean(cell2mat(values(iterationNDCG)))];
+        %tempNDCG(j) = mean(cell2mat(values(iterationNDCG)));
+        meanNDCG = mean(cell2mat(values(iterationNDCG)));
+        return;
+    end;    
+    trainSetPerm = randperm(stream,size(features, 1));
+    trainSetX = features(trainSetPerm(1:numTrain), :);
+    trainSetY = labels(trainSetPerm(1:numTrain));
+    usedQueries = trainSetQueries(trainSetPerm(1:numTrain));
+    O = build_O_per_query(trainSetY, usedQueries);
+    S = build_S_per_query(trainSetY, usedQueries);
+
+    %Only use weighted constraints for weighted RankSVM
+    if flag ~= RANKSVM_WEIGHTED && flag ~= ALTR_LIN_WEIGHTED && flag ~= RANKSVM_WEIGHTED_BAD
+        O = sign(O);
+    end
+    if flag == RANKSVM_WEIGHTED_BAD
+        O = -O;
+    end
+    if (flag == RELATIVE)
+        % RankSVM with Similar Attributes
+        % Learn on train set
+        w = train_ranksvm_with_sim(trainSetX, O, S,C);
+
+        % Evaluate NDCG on test set
+        for i = 1:length(testQueries)
+            indices = testSetMap(testQueries{i});
+            y = w' * testSetX(indices, :)';
+            r = testSetY(indices)';
+            %[y' r']
+            iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
+        end
+    end
+    if (flag == RANKSVM || flag == RANKSVM_WEIGHTED || flag == RANKSVM_WEIGHTED_BAD)
+        % RankSVM
+        % Learn on train set
+        w = train_ranksvm(trainSetX, O, C);
+        % Evaluate NDCG on test set
+        for i = 1:length(testQueries)
+            indices = testSetMap(testQueries{i});
+            y = w' * testSetX(indices, :)';
+            r = testSetY(indices)';
+            iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
+        end
+    end
+    if flag == REGRESSION
+        addpath('../libsvm-3.17/matlab');
+        model = train_regression(trainSetX,trainSetY);
+        for i=1:length(testQueries)
+            indices = testSetMap(testQueries{i});
+            %y = w' * testSetX(indices, :)';
+            r = testSetY(indices)';
+            y = svmpredict(r',testSetX(indices,:),model,'-q');
+            iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
+        end
+    end
+    %{
+                if (flag == ALTR_LIN)
+                    % Learn on train set
+                    w = train_altr_linear(trainSetX, O, S);
+                    size(w);
+                    % Evaluate NDCG on test set
+                    for i = 1:length(testQueries)
+                        indices = testSetMap(testQueries{i});
+                        y = w * testSetX(indices, :)';
+                        r = testSetY(indices)';
+                        iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
+                    end
+                end
+    %}
+    if (flag == ALTR_LIN || flag == ALTR_LIN_CHUNKING || flag == ALTR_LIN_WEIGHTED...
+            || flag == ALTR_LIN_DUAL || flag == ALTR_LIN_NO_WEAK)
+        % Learn on train set
+        if flag == ALTR_LIN_CHUNKING
+            w = train_altr_linear_chunking(trainSetX, O,C);
+        else
+            w = train_altr_linear(trainSetX, O, S,flag == ALTR_LIN_DUAL,flag ~= ALTR_LIN_NO_WEAK,C);
+        end
+        size(w);
+        % Evaluate NDCG on test set
+        for i = 1:length(testQueries)
+            indices = testSetMap(testQueries{i});
+            y = w * testSetX(indices, :)';
+            r = testSetY(indices)';
+            iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
+        end
+    end
+    if (flag == ALTR_RBF_KER)
+        error('fix this');
+        S = sparse(0, 0); % try without S
+        % ALTR RBF Kernel (trying alt formulation of K)
+        [A B] = train_altr_rbf(trainSetX, O, S, sigma, C);
+        % Evaluate NDCG on test set
+        ForKFirstArg = [O; S] * trainSetX;
+        AB = [A; B];
+        for i = 1:length(testQueries)
+            y = [];
+            indices = testSetMap(testQueries{i});
+            for l = 1:numel(indices)
+                x = testSetX(indices(l), :);
+                y = [y; rank_k_rbf(x, ForKFirstArg, AB, sigma)];
+            end
+            r = testSetY(indices)';
+            result_ndcg = compute_ndcg_rank(rank, y, r);
+            iterationNDCG(testQueries{i}) = result_ndcg;
+        end
+    end
+    if (flag == ALTR_POLY || flag == ALTR_POLY_KER_CHUNKING)
+        error('fix this');
+        if flag == ALTR_POLY_KER_CHUNKING
+            [A support_vectors] = train_altr_poly_chunking(trainSetX, O, degree,C);
+        else
+            [A B support_vectors] = train_altr_poly(trainSetX, O, S,degree,C);
+        end
+        % Evaluate NDCG on test set
+        for i = 1:length(testQueries)
+            y = [];
+            indices = testSetMap(testQueries{i});
+            for l = 1:numel(indices)
+                x = testSetX(indices(l), :);
+                y = [y; rank_k_poly(x, support_vectors, A, degree)];
+            end
+            r = testSetY(indices)';
+            error('fix results!');
+            result_ndcg = compute_ndcg_rank(rank, y, r);
+        end
+    end
+    meanNDCG = mean(cell2mat(values(iterationNDCG)));
+end
+
