@@ -4,7 +4,7 @@ function [] = run_experiments(input_dir, train_name, test_name, ...
          cvx_path,input)
     mystream = RandStream('mt19937ar','Seed',sum(100*clock));
     RandStream.setGlobalStream(mystream);
-
+    loadConstants();
     addpath(cvx_path);
     cvx_setup;
     learner_name = get_learner_name(input);
@@ -29,7 +29,7 @@ function [] = run_experiments(input_dir, train_name, test_name, ...
         train_quj = strcat(input_dir, train_name, '.', i_str, '.quj');
         test_fv = strcat(input_dir, test_name, '.', i_str, '.fv');
         test_quj = strcat(input_dir, test_name ,'.', i_str, '.quj');
-        if (strcmp(learner_name, 'Multi Attribute'))
+        if (input('learner') == ALTR_MULTI)
             results('train_set_2') = strcat(input_dir_2, train_name_2);
             results('test_set_2') = strcat(input_dir_2, test_name_2);
             train_fv_2 = strcat(input_dir_2, train_name_2, '.', i_str, '.fv');

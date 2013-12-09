@@ -106,7 +106,7 @@ function [ ndcg_1 var_ndcg_1 ndcg_2 var_ndcg_2] = ...
             trainSetY_2 = labels_2(trainSetPerm_2(1:numTrain_2));
             usedQueries_2 = trainSetQueries_2(trainSetPerm_2(1:numTrain_2));
             O_2 = build_O_per_query(trainSetY_2, usedQueries_2);
-
+            display(sprintf('NumTrain1=%d, NumTrain2=%d',numTrain_1,numTrain_2));
             % Learn on train set
             lambda = 1;
             O_1 = clampToOne(O_1);
