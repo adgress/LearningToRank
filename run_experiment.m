@@ -18,32 +18,6 @@ function [result_file_name] = make_result_file_name(input,cfgName)
     result_file_name = [cfgName param_string '.mat'];
 end
 
-function [input] = load_configs_from_file(input,configFile)
-    fid = fopen(configFile,'r');
-    if fid == -1
-        display(sprintf('Could not open config file'));
-        return;
-    end    
-    while ~feof(fid)
-        x = fgetl(fid);
-        if length(x) == 0 || x(1) == '#'
-            continue;
-        end
-        C = textscan(x,'%s','delimiter','=');
-        C = C{1};
-        var = C{1};
-        val = '';
-        if length(C) > 1
-            val = C{2}; 
-        end
-        if length(val) > 0 && ~isnan(str2double(val));
-            val = str2double(val);
-        end
-        input(var) = val;
-    end
-    fclose(fid);
-end
-
 function [name] = get_cfg_name(configFile)
     split = split_string(configFile,'/');
     name = split_string(split{end},'.');

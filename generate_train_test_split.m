@@ -3,8 +3,6 @@ function [] = generate_train_test_split(fv_file, quj_file, size_quj_header, ...
          num_train_test_splits, num_test_queries, ndcg_rank, train_name, ...
          test_name, normalize)
 
-    data = importdata(fv_file, '\t', 1);
-
     fid = fopen(quj_file, 'rt');
     formatSpec = '%s';
     N = size_quj_header;
@@ -12,12 +10,18 @@ function [] = generate_train_test_split(fv_file, quj_file, size_quj_header, ...
     queryHeader = queryHeader{1};
     queryIndex = find(strcmp(queryHeader, 'query'));
     queryData = textscan(fid,'%s %s %s %s', 'delimiter', '\t');
+    trainingDataSize = 20000;
+    for i=1:numel(queryData)
+        queryData{i} = queryData{i}(1:trainingDataSize);
+    end
     fclose(fid);
 
     queries = queryData{queryIndex};
-    features = data.data;
+    data = importdata(fv_file, '\t', 1);   
+    features = data.data(1:trainingDataSize,:);
     labels = features(:, end);
-
+    
+    
     if (normalize)
         maxes = max(abs(features(:, 1:end-1)));
         maxes(find(~maxes)) = 1;
@@ -38,5 +42,4 @@ function [] = generate_train_test_split(fv_file, quj_file, size_quj_header, ...
                         strcat(output_dir, test_name, '.', int2str(i), '.quj'));
          display(fprintf('Finished set %d of %d',i,num_train_test_splits));
     end;
-    %exit;
 end
