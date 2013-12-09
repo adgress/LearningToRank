@@ -2,15 +2,15 @@ function [] = generate_train_test_split(fv_file, quj_file, size_quj_header, ...
          feature_indices_to_use, output_dir, ...
          num_train_test_splits, num_test_queries, ndcg_rank, train_name, ...
          test_name, normalize)
-
+    trainingDataSize = 20000;
     fid = fopen(quj_file, 'rt');
     formatSpec = '%s';
     N = size_quj_header;
     queryHeader = textscan(fid, formatSpec, N, 'delimiter', '\t');
     queryHeader = queryHeader{1};
     queryIndex = find(strcmp(queryHeader, 'query'));
-    queryData = textscan(fid,'%s %s %s %s', 'delimiter', '\t');
-    trainingDataSize = 20000;
+    queryData = textscan(fid,'%s %s %s %s', trainingDataSize,'delimiter', '\t');
+    
     for i=1:numel(queryData)
         queryData{i} = queryData{i}(1:trainingDataSize);
     end
@@ -29,7 +29,7 @@ function [] = generate_train_test_split(fv_file, quj_file, size_quj_header, ...
         featuresSubset = normalizedFeatures(:, feature_indices_to_use);
     else
         featuresSubset = features(:, feature_indices_to_use);
-    end;
+    end
     qujHeader = queryHeader;
     fvHeader = data.colheaders([feature_indices_to_use end]);
 
