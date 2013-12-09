@@ -4,6 +4,7 @@ function [param_string] = make_param_string(input)
     C = num2str(input('C'));
     degree = num2str(input('degree'));
     sigma = num2str(input('sigma'));
+    usePar = input('usePar');
     param_string = '';
     if learner == ALTR_LIN || learner == ALTR_POLY ||...
             (learner >= RANKSVM && learner <= RANKSVM_WEIGHTED_BAD) || ...
@@ -15,5 +16,8 @@ function [param_string] = make_param_string(input)
     end
     if learner == ALTR_RBF_KER
         param_string = [param_string ', sigma = ' sigma];
+    end
+    if usePar
+        param_string = [param_string ', Parallel'];
     end
 end

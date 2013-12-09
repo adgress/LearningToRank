@@ -65,14 +65,37 @@ function [ndcg var_ndcg] = run_saved_experiment(...
         disp(strcat('perTrainArray index ', int2str(k)))
         tempNDCG = zeros(iterations,1); 
         numTrain = floor(size(features, 1) * perTrainArray(k));
-        parfor j = 1:iterations        
-        %for j = 1:iterations
-            disp(strcat('iteration ', int2str(j)))
-            
-            %tempNDCG = [tempNDCG; mean(cell2mat(values(iterationNDCG)))];
-            %tempNDCG(j) = mean(cell2mat(values(iterationNDCG)));
-            tempNDCG(j) = runSingleIteration(features,labels,trainSetQueries,...
-                testSetX,testSetY,testQueries,testSetMap,input,numTrain,stream,flag,rank);
+        trainSetPerms = cell(iterations,1);            
+        for j=1:iterations
+            trainSetPerms{j} = randperm(stream,size(features, 1));
+        end
+        if input('usePar')
+            parfor j = 1:iterations            
+                disp(strcat('iteration ', int2str(j)))               
+                trainSetPerm = trainSetPerms{j}; 
+                trainSetX = features(trainSetPerm(1:numTrain), :);
+                trainSetY = labels(trainSetPerm(1:numTrain));
+                usedQueries = trainSetQueries(trainSetPerm(1:numTrain));
+                O = build_O_per_query(trainSetY, usedQueries);
+                S = build_S_per_query(trainSetY, usedQueries);
+
+                tempNDCG(j) = runSingleIteration(trainSetX,trainSetY,O,S,...
+                    testSetX,testSetY,testQueries,testSetMap,input,numTrain,stream,flag,rank);
+            end
+        else            
+            for j = 1:iterations
+                disp(strcat('iteration ', int2str(j)))               
+                trainSetPerm = trainSetPerms{j};                
+                trainSetX = features(trainSetPerm(1:numTrain), :);
+                trainSetY = labels(trainSetPerm(1:numTrain));
+                usedQueries = trainSetQueries(trainSetPerm(1:numTrain));
+                O = build_O_per_query(trainSetY, usedQueries);
+                S = build_S_per_query(trainSetY, usedQueries);
+                display(sprintf('numO=%d, numS=%d',size(O,1),size(S,1)));
+                
+                tempNDCG(j) = runSingleIteration(trainSetX,trainSetY,O,S,...
+                    testSetX,testSetY,testQueries,testSetMap,input,numTrain,stream,flag,rank);
+            end
         end
         ndcg = [ndcg; mean(tempNDCG)];
         var_ndcg = [var_ndcg; var(tempNDCG)];
@@ -80,7 +103,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
     display(toc)
 end
 
-function [meanNDCG] = runSingleIteration(features,labels,trainSetQueries,...
+function [meanNDCG] = runSingleIteration(trainSetX,trainSetY,O,S,...
     testSetX,testSetY,testQueries,testSetMap,input,numTrain,stream,flag,rank)
     loadConstants();
     C = input('C');
@@ -88,6 +111,7 @@ function [meanNDCG] = runSingleIteration(features,labels,trainSetQueries,...
     sigma = input('sigma');
     iterationNDCG = containers.Map();
     if (flag == RANDOM)
+        error('Fix this');
         % Random Ordering NDCG
         % Evaluate NDCG on test set
         for i = 1:length(testQueries)
@@ -96,18 +120,10 @@ function [meanNDCG] = runSingleIteration(features,labels,trainSetQueries,...
             r = testSetY(indices)';
             iterationNDCG(testQueries{i}) = compute_ndcg_rank(rank, y, r);
         end;
-        %tempNDCG = [tempNDCG; mean(cell2mat(values(iterationNDCG)))];
-        %tempNDCG(j) = mean(cell2mat(values(iterationNDCG)));
         meanNDCG = mean(cell2mat(values(iterationNDCG)));
         return;
     end;    
-    trainSetPerm = randperm(stream,size(features, 1));
-    trainSetX = features(trainSetPerm(1:numTrain), :);
-    trainSetY = labels(trainSetPerm(1:numTrain));
-    usedQueries = trainSetQueries(trainSetPerm(1:numTrain));
-    O = build_O_per_query(trainSetY, usedQueries);
-    S = build_S_per_query(trainSetY, usedQueries);
-
+    
     %Only use weighted constraints for weighted RankSVM
     if flag ~= RANKSVM_WEIGHTED && flag ~= ALTR_LIN_WEIGHTED && flag ~= RANKSVM_WEIGHTED_BAD
         O = sign(O);
