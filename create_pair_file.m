@@ -14,10 +14,13 @@ function [] = create_pair_file(directory)
         pairFileName = [nameParts{1} 'pair'];
         fidPairFile = fopen([directory '/' pairFileName],'w');
         tabchar = sprintf('\t');
-        fprintf(fidPairFile,['group' tabchar 'query' tabchar 'url1' tabchar 'url2' tabchar 'gdiff\n']);
+        %just for news
+        %fprintf(fidPairFile,['group' tabchar 'query' tabchar 'url1' tabchar 'url2' tabchar 'gdiff\n']);
+        
+        fprintf(fidPairFile,['query' tabchar 'url1' tabchar 'url2' tabchar 'gdiff\n']);
         fid = fopen([directory '/' fileInfo.name]);
         assert(fid > -1);
-        fgetl(fid); %Read past header
+        x = fgetl(fid); %Read past header
         
         query = '';
         queryData = {};
@@ -30,7 +33,10 @@ function [] = create_pair_file(directory)
             parsedLine = parse_line(line);
             %%TODO: Only for news
             %lineQuery = [parsedLine{2:end-2}];
-            lineQuery = [parsedLine{1} tabchar [parsedLine{2:end-2}]];
+            
+            %Only for news?
+            %lineQuery = [parsedLine{1} tabchar [parsedLine{2:end-2}]];
+            lineQuery = parsedLine{1};
             
             %lineQuery = [parsedLine{1:end-2}];
             if numel(query) == 0 || strcmp(lineQuery,query) ~= 1
@@ -70,11 +76,8 @@ function [parsedLine] = parse_line(line)
     tabChar = sprintf('\t');
     parsedLine = split_string(line,tabChar);
     if numel(parsedLine) == 4
-        %TODO: only for local
-        %parsedLine = parsedLine(2:end);
-        
-        %TODO: Do I need this?
-        %parsedLine = parsedLine(1:end-1);
+        %TODO: only for local                       
+        parsedLine = parsedLine(1:end-1);
     end
     grade = parsedLine{end};    
     if strcmp(grade,'Excellent')

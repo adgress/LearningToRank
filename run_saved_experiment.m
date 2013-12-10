@@ -33,7 +33,8 @@ function [ndcg var_ndcg] = run_saved_experiment(...
     S = [];
     
     testSetMap = containers.Map();
-    % Read in train and test data
+    
+    % Read in train data    
     data = importdata(train_fv, '\t', 1);
     fid = fopen(train_quj,'rt');
     queryData = textscan(fid,'%s %s %s %s', 'delimiter', '\t', 'HeaderLines', 1);
@@ -41,6 +42,9 @@ function [ndcg var_ndcg] = run_saved_experiment(...
     trainSetQueries = queryData{queryIndexTrain};
     features = data.data(:, 1:end-1);
     labels = data.data(:, end);
+    [size(queryData{1},1) size(data.data,1)]
+    
+    % Read in test data
     data = importdata(test_fv, '\t', 1);
     fid = fopen(test_quj,'rt');
     queryData = textscan(fid,'%s %s %s %s', 'delimiter', '\t', 'HeaderLines', 1);
@@ -49,6 +53,9 @@ function [ndcg var_ndcg] = run_saved_experiment(...
     testQueries = unique(queries);
     testSetX = data.data(:, 1:end-1);
     testSetY = data.data(:, end);
+    [size(queryData{1},1) size(data.data,1)]
+    
+    
     % Find the indices of each unique test set queries (not necessarily adjacent in source files)
     for i = 1:length(testQueries)
         testSetMap(testQueries{i}) = find(strcmp(queries, testQueries{i}));

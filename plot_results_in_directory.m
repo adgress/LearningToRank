@@ -7,6 +7,12 @@ function [] = plot_results_in_directory(path)
             continue;
         end        
         x = load([path '/' files(i).name]);
+        if isfield(x,'results1')
+            x.results = x.results1;
+        end
+        if isfield(x,'results2')
+            x.results = x.results2;
+        end
         allResults{end+1} = x.results;
     end
     plot_results(allResults);

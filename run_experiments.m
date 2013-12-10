@@ -23,15 +23,19 @@ function [] = run_experiments(input_dir, train_name, test_name, ...
     % Find which column in the .quj files has the query string
     queryIndexTrain = get_query_index(strcat(input_dir, train_name, '.1.quj'), num_quj_columns_train);
     queryIndexTest = get_query_index(strcat(input_dir, test_name, '.1.quj'), num_quj_columns_test);
+    if input('learner') == ALTR_MULTI
+        results('train_set_2') = strcat(input_dir_2, train_name_2);
+        results('test_set_2') = strcat(input_dir_2, test_name_2);
+        results1 = containers.Map(results.keys,results.values);
+        results2 = containers.Map(results.keys,results.values);        
+    end
     for i = 1:num_train_test_splits
         i_str = int2str(i);
         train_fv = strcat(input_dir, train_name, '.', i_str, '.fv');
         train_quj = strcat(input_dir, train_name, '.', i_str, '.quj');
         test_fv = strcat(input_dir, test_name, '.', i_str, '.fv');
-        test_quj = strcat(input_dir, test_name ,'.', i_str, '.quj');
-        if (input('learner') == ALTR_MULTI)
-            results('train_set_2') = strcat(input_dir_2, train_name_2);
-            results('test_set_2') = strcat(input_dir_2, test_name_2);
+        test_quj = strcat(input_dir, test_name ,'.', i_str, '.quj');        
+        if (input('learner') == ALTR_MULTI)            
             train_fv_2 = strcat(input_dir_2, train_name_2, '.', i_str, '.fv');
             train_quj_2 = strcat(input_dir_2, train_name_2, '.', i_str, '.quj');
             test_fv_2 = strcat(input_dir_2, test_name_2, '.', i_str, '.fv');
@@ -48,6 +52,11 @@ function [] = run_experiments(input_dir, train_name, test_name, ...
             results(strcat('var_', i_str)) = temp_var;
             results(strcat('ndcg2_', i_str)) = temp_ndcg_2;
             results(strcat('var2_', i_str)) = temp_var_2;
+            
+            results1(strcat('ndcg_', i_str)) = temp_ndcg;
+            results1(strcat('var_', i_str)) = temp_var;
+            results2(strcat('ndcg_', i_str)) = temp_ndcg_2;
+            results2(strcat('var_', i_str)) = temp_var_2;
         else
             [temp_ndcg temp_var] = run_saved_experiment(train_fv, train_quj, test_fv, ...
                                        test_quj, queryIndexTrain, queryIndexTest, sampling_rate, ndcg_rank, ...
@@ -55,8 +64,12 @@ function [] = run_experiments(input_dir, train_name, test_name, ...
             results(strcat('ndcg_', i_str)) = temp_ndcg;
             results(strcat('var_', i_str)) = temp_var;
         end;
+        mkdir(output_dir);
         save(strcat(output_dir, results_file_name), 'results')
-        
+        if input('learner') == ALTR_MULTI
+            save(strcat(output_dir, ['test1_' results_file_name]), 'results1')
+            save(strcat(output_dir, ['test2_' results_file_name]), 'results2')
+        end
     end
     %exit;
 end
