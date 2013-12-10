@@ -49,7 +49,7 @@ function [ndcg] = save_experiment(qujHeader, queryData, fvHeader, X, Y, queries,
     qujHeader = cellstr(qujHeader);
     qujHeader = cat(2, qujHeader);
 
-%{
+
     fileID = fopen(test_fv, 'wt');
     for i = 1:length(fvHeader)
         fprintf(fileID, '%s\t', fvHeader{i});
@@ -57,7 +57,8 @@ function [ndcg] = save_experiment(qujHeader, queryData, fvHeader, X, Y, queries,
     fprintf(fileID, '\n');
     fclose(fileID);
     dlmwrite(test_fv, [testSetX testSetY], '-append', 'delimiter', '\t', 'precision', '%0.6f');
-%}
+
+    %{
     tic;
     data = struct();
     data.fvHeader = fvHeader;
@@ -67,6 +68,7 @@ function [ndcg] = save_experiment(qujHeader, queryData, fvHeader, X, Y, queries,
     save(test_fv,'data');
     x = toc;
     display(sprintf('Time to save: %f',x));
+    %}
     fileID = fopen(test_quj, 'w');
     for i = 1:length(qujHeader)
         fprintf(fileID, '%s\t', qujHeader{i});
@@ -93,7 +95,8 @@ function [ndcg] = save_experiment(qujHeader, queryData, fvHeader, X, Y, queries,
                         queryField3{i}, queryField4{i});
     end;
     fclose(fileID);
-%{
+
+    %Need this format for GBRank
     fileID = fopen(train_fv, 'wt');
     for i = 1:length(fvHeader)
         fprintf(fileID, '%s\t', fvHeader{i});
@@ -101,7 +104,8 @@ function [ndcg] = save_experiment(qujHeader, queryData, fvHeader, X, Y, queries,
     fprintf(fileID, '\n');
     fclose(fileID);
     dlmwrite(train_fv, [X Y],  '-append', 'delimiter', '\t', 'precision', '%0.6f');
-%}
+
+    %{
     tic;
     data = struct();
     data.fvHeader = fvHeader;
@@ -111,6 +115,5 @@ function [ndcg] = save_experiment(qujHeader, queryData, fvHeader, X, Y, queries,
     save(train_fv,'data');
     x = toc;
     display(sprintf('Time to save: %f',x));
-
-
+%}
 end
