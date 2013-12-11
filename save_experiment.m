@@ -90,12 +90,22 @@ function [ndcg] = save_experiment(qujHeader, queryData, fvHeader, X, Y, queries,
         fprintf(fileID, '%s\t', qujHeader{i});
     end
     fprintf(fileID, '\n');
+    totalPairwiseRelationships = 0;
+    numThisQuery = 0;
+    currQuery = '';
     for i = 1:length(queryField1)
+        if ~strcmp(queryField1{i},currQuery)
+            totalPairwiseRelationships = totalPairwiseRelationships + numThisQuery*(numThisQuery-1)/2;
+            currQuery = queryField1{i};
+            numThisQuery = 0;
+        end
         fprintf(fileID, '%s\t%s\t%s\t%s\n', queryField1{i}, queryField2{i}, ...
                         queryField3{i}, queryField4{i});
-    end;
+        numThisQuery = numThisQuery + 1;
+    end;    
     fclose(fileID);
-
+    display(sprintf('Num Pairs:%d',totalPairwiseRelationships));
+    
     %Need this format for GBRank
     fileID = fopen(train_fv, 'wt');
     for i = 1:length(fvHeader)
