@@ -4,16 +4,16 @@ function [] = generate_train_test_split(fv_file, quj_file, size_quj_header, ...
     test_name, normalize)
     oldStream = RandStream.getGlobalStream();
     stream = RandStream('mt19937ar','Seed',10);
-    RandStream.setGlobalStream(stream);
-    trainingDataSize = 6000;
+    RandStream.setGlobalStream(stream);    
     fid = fopen(quj_file, 'rt');
     formatSpec = '%s';
     N = size_quj_header;
     queryHeader = textscan(fid, formatSpec, N, 'delimiter', '\t');
     queryHeader = queryHeader{1};
     queryIndex = find(strcmp(queryHeader, 'query'));
-    queryData = textscan(fid,'%s %s %s %s', trainingDataSize,'delimiter', '\t');
-
+    queryData = textscan(fid,'%s %s %s %s','delimiter', '\t');
+    %trainingDataSize = numel(queryData{1});
+    trainingDataSize = 6000;
     for i=1:numel(queryData)
         queryData{i} = queryData{i}(1:trainingDataSize);
     end
@@ -24,7 +24,8 @@ function [] = generate_train_test_split(fv_file, quj_file, size_quj_header, ...
     features = data.data(1:trainingDataSize,:);
     labels = features(:, end);
 
-
+    numPairs = countNumPairs(queryData{1});
+    display(sprintf('Overall number of pairs:%d',numPairs));
     if (normalize)
         maxes = max(abs(features(:, 1:end-1)));
         maxes(find(~maxes)) = 1;
@@ -49,4 +50,18 @@ function [] = generate_train_test_split(fv_file, quj_file, size_quj_header, ...
     end
     display(sprintf('Average num pairs:%.2f',numPairs/num_train_test_splits));
     RandStream.setGlobalStream(oldStream);
+end
+
+function [numPairs] = countNumPairs(queryData)
+    numPairs = 0;
+    numThisQuery = 0;
+    currQuery = '';
+    for i = 1:length(queryData)
+        if ~strcmp(queryData{i},currQuery)
+            numPairs = numPairs + numThisQuery*(numThisQuery-1)/2;
+            currQuery = queryData{i};
+            numThisQuery = 0;
+        end
+        numThisQuery = numThisQuery + 1;
+    end
 end
