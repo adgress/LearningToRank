@@ -1,7 +1,7 @@
 function [input] = load_configs_from_file(input,configFile)
     fid = fopen(configFile,'r');
     if fid == -1
-        display(sprintf('Could not open config file'));
+        error('Could not open config file');
         return;
     end    
     while ~feof(fid)
