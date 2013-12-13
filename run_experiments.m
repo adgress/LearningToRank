@@ -64,13 +64,13 @@ function [] = run_experiments(input_dir, train_name, test_name, ...
                                        learner, iterations,input);
             results(strcat('ndcg_', i_str)) = temp_ndcg;
             results(strcat('var_', i_str)) = temp_var;
-        end;
-        mkdir(output_dir);
-        save(strcat(output_dir, results_file_name), 'results')
-        if input('learner') == ALTR_MULTI
-            save(strcat(output_dir, ['test1_' results_file_name]), 'results1')
-            save(strcat(output_dir, ['test2_' results_file_name]), 'results2')
-        end
+        end;        
+    end
+    mkdir(output_dir);
+    save(strcat(output_dir, results_file_name), 'results')
+    if input('learner') == ALTR_MULTI
+        save(strcat(output_dir, ['test1_' results_file_name]), 'results1')
+        save(strcat(output_dir, ['test2_' results_file_name]), 'results2')
     end
     %exit;
 end

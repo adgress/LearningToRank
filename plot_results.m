@@ -11,7 +11,7 @@ function [] = plot_results(allResults)
         %ndcg_rank = results('ndcg_rank');
         %iterations = results('iterations');
         %sampling_rates = results('sampling_rate');
-        sampling_rates = 10:10:200;
+        sampling_rates = results('num_pairs');
         vars = getVariances(results);
         ndcgs = getNDCGs(results);
         average_ndcgs = sum(ndcgs,2)/size(ndcgs,2);
@@ -21,7 +21,8 @@ function [] = plot_results(allResults)
         leg{i} = learner;
     end
     legend(leg);
-    xlabel('Sampling Rate','FontSize',8);
+    %xlabel('Sampling Rate','FontSize',8);
+    xlabel('Number of Constraints','FontSize',8);
     ylabel('Average NDCG','FontSize',8);
     hold off;
 end
@@ -36,7 +37,7 @@ end
 
 function [values] = getValuesWithPrefix(results,prefix)
     %numSamples = length(results('sampling_rate'));
-    numSamples = 20;
+    numSamples = length(((results('num_pairs'))));
     iters = results('num_train_test_splits');
     values = zeros(numSamples,iters);
     for i=1:iters
