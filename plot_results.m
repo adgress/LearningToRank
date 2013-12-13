@@ -10,7 +10,8 @@ function [] = plot_results(allResults)
         learner = results('learner');
         %ndcg_rank = results('ndcg_rank');
         %iterations = results('iterations');
-        sampling_rates = results('sampling_rate');
+        %sampling_rates = results('sampling_rate');
+        sampling_rates = 10:10:200;
         vars = getVariances(results);
         ndcgs = getNDCGs(results);
         average_ndcgs = sum(ndcgs,2)/size(ndcgs,2);
@@ -34,8 +35,9 @@ function [ndcgs] = getNDCGs(results)
 end
 
 function [values] = getValuesWithPrefix(results,prefix)
-    numSamples = length(results('sampling_rate'));
-    iters = results('iterations');
+    %numSamples = length(results('sampling_rate'));
+    numSamples = 20;
+    iters = results('num_train_test_splits');
     values = zeros(numSamples,iters);
     for i=1:iters
         key = [prefix num2str(i)];

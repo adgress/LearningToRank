@@ -59,7 +59,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
     % Find the indices of each unique test set queries (not necessarily adjacent in source files)
     for i = 1:length(testQueries)
         testSetMap(testQueries{i}) = find(strcmp(queries, testQueries{i}));
-    end;
+    end
     %TODO: Make this less hacky by using different seeds each time the experiment suite is run
     stream = RandStream('mt19937ar','Seed',10);
     
@@ -68,40 +68,103 @@ function [ndcg var_ndcg] = run_saved_experiment(...
         matlabpool(4);
     end    
     tic;
-    for k = 1:length(perTrainArray)
+    
+    [allPairs,scoreDiffs] = generateAllPairs(queries,labels);
+    trainSetPerms = cell(iterations,1);    
+    for j=1:iterations
+        trainSetPerms{j} = randperm(stream,size(allPairs, 1));
+    end
+    %for k = 1:length(perTrainArray)
+    numPairsArray = eval(eval(input('num_pairs')));
+    for k = 1:length(numPairsArray);
         disp(strcat('perTrainArray index ', int2str(k)))
         tempNDCG = zeros(iterations,1); 
-        numTrain = floor(size(features, 1) * perTrainArray(k));
-        trainSetPerms = cell(iterations,1);            
-        for j=1:iterations
-            trainSetPerms{j} = randperm(stream,size(features, 1));
-        end
+        %numTrain = floor(size(features, 1) * perTrainArray(k));                
+        numPairs = numPairsArray(k);
         if input('usePar')
             parfor j = 1:iterations            
                 disp(strcat('iteration ', int2str(j)))               
                 trainSetPerm = trainSetPerms{j}; 
+                %{
                 trainSetX = features(trainSetPerm(1:numTrain), :);
                 trainSetY = labels(trainSetPerm(1:numTrain));
-                usedQueries = trainSetQueries(trainSetPerm(1:numTrain));
+                usedQueries = trainSetQueries(trainSetPerm(1:numTrain));                
                 O = build_O_per_query(trainSetY, usedQueries);
                 S = build_S_per_query(trainSetY, usedQueries);
-
+                display(sprintf('numO=%d, numS=%d',size(O,1),size(S,1)));
                 tempNDCG(j) = runSingleIteration(trainSetX,trainSetY,O,S,...
                     testSetX,testSetY,testQueries,testSetMap,input,numTrain,stream,flag,rank);
+                %}
+                
+                
+                trainingPairs = allPairs(trainSetPerm(1:numPairs),:);
+                scoreDiffsUsed = scoreDiffs(trainSetPerm(1:numPairs));
+                [instancesUsed,I] = sort(unique(trainingPairs(:)),'ascend');
+                mapping = sparse(max(instancesUsed),1);
+                mapping(instancesUsed) = I;
+                trainSetX = features(instancesUsed,:);
+                trainSetY = labels(instancesUsed);
+                trainingPairs(:,1) = mapping(trainingPairs(:,1));
+                trainingPairs(:,2) = mapping(trainingPairs(:,2));
+                pairs_same = trainingPairs(scoreDiffsUsed == 0,:);               
+                pairs_diff = trainingPairs(scoreDiffsUsed ~= 0,:);                
+                scores_diff = sign(scoreDiffsUsed(scoreDiffsUsed ~= 0,:));
+                O = zeros(numel(scores_diff),numel(instancesUsed));  
+                S = zeros(size(pairs_same,1),numel(instancesUsed));
+                for i=1:size(pairs_diff,1)
+                    O(i,pairs_diff(i,1)) = scores_diff(i);
+                    O(i,pairs_diff(i,2)) = -scores_diff(i);
+                end
+                for i=1:size(pairs_same,1)
+                    S(i,pairs_same(i,1)) = 1;
+                    S(i,pairs_same(i,2)) = -1;
+                end
+                display(sprintf('numO=%d, numS=%d',size(O,1),size(S,1)));
+                
+                tempNDCG(j) = runSingleIteration(trainSetX,trainSetY,O,S,...
+                    testSetX,testSetY,testQueries,testSetMap,input,size(instancesUsed,1),stream,flag,rank);
             end
         else            
             for j = 1:iterations
                 disp(strcat('iteration ', int2str(j)))               
-                trainSetPerm = trainSetPerms{j};                
+                trainSetPerm = trainSetPerms{j};  
+                
+                %{
                 trainSetX = features(trainSetPerm(1:numTrain), :);
                 trainSetY = labels(trainSetPerm(1:numTrain));
                 usedQueries = trainSetQueries(trainSetPerm(1:numTrain));
                 O = build_O_per_query(trainSetY, usedQueries);
                 S = build_S_per_query(trainSetY, usedQueries);
+                tempNDCG(j) = runSingleIteration(trainSetX,trainSetY,O,S,...
+                    testSetX,testSetY,testQueries,testSetMap,input,numTrain,stream,flag,rank);
+                %}
+                
+                trainingPairs = allPairs(trainSetPerm(1:numPairs),:);
+                scoreDiffsUsed = scoreDiffs(trainSetPerm(1:numPairs));
+                [instancesUsed,I] = sort(unique(trainingPairs(:)),'ascend');
+                mapping = sparse(max(instancesUsed),1);
+                mapping(instancesUsed) = I;
+                trainSetX = features(instancesUsed,:);
+                trainSetY = labels(instancesUsed);
+                trainingPairs(:,1) = mapping(trainingPairs(:,1));
+                trainingPairs(:,2) = mapping(trainingPairs(:,2));
+                pairs_same = trainingPairs(scoreDiffsUsed == 0,:);               
+                pairs_diff = trainingPairs(scoreDiffsUsed ~= 0,:);                
+                scores_diff = sign(scoreDiffsUsed(scoreDiffsUsed ~= 0,:));
+                O = zeros(numel(scores_diff),numel(instancesUsed));  
+                S = zeros(size(pairs_same,1),numel(instancesUsed));
+                for i=1:size(pairs_diff,1)
+                    O(i,pairs_diff(i,1)) = scores_diff(i);
+                    O(i,pairs_diff(i,2)) = -scores_diff(i);
+                end
+                for i=1:size(pairs_same,1)
+                    S(i,pairs_same(i,1)) = 1;
+                    S(i,pairs_same(i,2)) = -1;
+                end
                 display(sprintf('numO=%d, numS=%d',size(O,1),size(S,1)));
                 
                 tempNDCG(j) = runSingleIteration(trainSetX,trainSetY,O,S,...
-                    testSetX,testSetY,testQueries,testSetMap,input,numTrain,stream,flag,rank);
+                    testSetX,testSetY,testQueries,testSetMap,input,size(instancesUsed,1),stream,flag,rank);
             end
         end
         ndcg = [ndcg; mean(tempNDCG)];
@@ -249,3 +312,24 @@ function [meanNDCG] = runSingleIteration(trainSetX,trainSetY,O,S,...
     meanNDCG = mean(cell2mat(values(iterationNDCG)));
 end
 
+function [allPairs,scoreDiffs] = generateAllPairs(queries,labels)
+    allPairs = zeros(numel(queries),2);
+    scoreDiffs = zeros(numel(queries),1);
+    allPairsIndex = 1;
+    beginIndex = 1;
+    endIndex = 1;
+    while endIndex <= numel(queries)        
+        while strcmp(queries{beginIndex},queries{endIndex}) && endIndex < numel(queries)
+            endIndex = endIndex + 1;
+        end
+        for i=beginIndex:endIndex
+            for j=i+1:endIndex
+                allPairs(allPairsIndex,:) = [i j];
+                scoreDiffs(allPairsIndex,:) = labels(i) - labels(j);
+                allPairsIndex = allPairsIndex + 1;
+            end
+        end
+        beginIndex = endIndex+1;
+        endIndex = beginIndex+1;
+    end
+end

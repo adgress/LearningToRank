@@ -16,6 +16,7 @@ function [] = run_experiments(input_dir, train_name, test_name, ...
     results('num_train_test_splits') = num_train_test_splits;
     results('iterations') = iterations;
     results('sampling_rate') = sampling_rate;
+    results('num_pairs') = eval(eval(input('num_pairs')));
     strcat(input_dir, train_name, '.1.quj')
     num_quj_columns_train = get_number_columns(strcat(input_dir, train_name, '.1.quj'));
     num_quj_columns_test = get_number_columns(strcat(input_dir, test_name, '.1.quj'));
