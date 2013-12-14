@@ -1,6 +1,5 @@
 function [] = plot_results(allResults)
-    figure
-    hold on
+    hold on   
     leg = {};
     symbols = {'.','+','v','x'};
     %colors = {'r','g','b','c','m','y','k'};
@@ -21,7 +20,7 @@ function [] = plot_results(allResults)
         leg{i} = learner;
     end
     legend(leg);
-    %xlabel('Sampling Rate','FontSize',8);
+    %xlabel('Sampling Rate','FontSize',8);    
     xlabel('Number of Constraints','FontSize',8);
     ylabel('Average NDCG','FontSize',8);
     hold off;

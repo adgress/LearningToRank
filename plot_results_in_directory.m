@@ -1,11 +1,16 @@
-function [] = plot_results_in_directory(path)
-    files = dir(path);
-    files = files(3:end);
+function [] = plot_results_in_directory(path,prefix)
+    if nargin < 2
+        prefix = '';
+    end    
+    files = dir(path);    
     allResults = {};
     for i=1:numel(files)
         if files(i).isdir
             continue;
-        end        
+        end              
+        if length(prefix) > 0 && isempty(strfind(files(i).name,prefix))
+            continue;
+        end
         x = load([path '/' files(i).name]);
         if isfield(x,'results1')
             x.results = x.results1;
