@@ -5,6 +5,7 @@ function [param_string] = make_param_string(input)
     degree = num2str(input('degree'));
     sigma = num2str(input('sigma'));
     usePar = input('usePar');
+    whiten = input('whiten');
     param_string = '';
     if learner == ALTR_LIN || learner == ALTR_POLY ||...
             (learner >= RANKSVM && learner <= RANKSVM_WEIGHTED_BAD) || ...
@@ -19,5 +20,8 @@ function [param_string] = make_param_string(input)
     end
     if usePar
         param_string = [param_string ', Parallel'];
+    end
+    if input('whiten')
+        param_string = [param_string ', whiten'];
     end
 end
