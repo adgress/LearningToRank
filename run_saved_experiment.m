@@ -69,7 +69,8 @@ function [ndcg var_ndcg] = run_saved_experiment(...
     end    
     tic;
     
-    [allPairs,scoreDiffs] = generateAllPairs(queries,labels);
+    discardWeakConstraints = true;
+    [allPairs,scoreDiffs] = generateAllPairs(queries,labels,discardWeakConstraints);
     trainSetPerms = cell(iterations,1);    
     for j=1:iterations
         trainSetPerms{j} = randperm(stream,size(allPairs, 1));
@@ -97,7 +98,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
                 %}
                 
                 
-                trainingPairs = allPairs(trainSetPerm(1:numPairs),:);
+                trainingPairs = allPairs(trainSetPerm(1:numPairs),:); %#ok<PFBNS>
                 scoreDiffsUsed = scoreDiffs(trainSetPerm(1:numPairs));
                 [instancesUsed,I] = sort(unique(trainingPairs(:)),'ascend');
                 mapping = sparse(max(instancesUsed),1);
@@ -180,6 +181,16 @@ function [meanNDCG] = runSingleIteration(trainSetX,trainSetY,O,S,...
     degree = input('degree');
     sigma = input('sigma');
     iterationNDCG = containers.Map();
+    if input('whiten')
+        Cxx = cov(trainSetX);
+        Cxx = Cxx + .001*eye(size(Cxx));
+        Cxx_inv = pinv(Cxx);
+        T = sqrtm(Cxx_inv);
+        whitenedTrainX = trainSetX*T;
+        whitenedTestX = testSetX*T;
+        trainSetX = whitenedTrainX;
+        testSetX = whitenedTestX;
+    end
     if (flag == RANDOM)
         error('Fix this');
         % Random Ordering NDCG
@@ -312,9 +323,9 @@ function [meanNDCG] = runSingleIteration(trainSetX,trainSetY,O,S,...
     meanNDCG = mean(cell2mat(values(iterationNDCG)));
 end
 
-function [allPairs,scoreDiffs] = generateAllPairs(queries,labels)
-    allPairs = zeros(numel(queries),2);
-    scoreDiffs = zeros(numel(queries),1);
+function [allPairs,scoreDiffs] = generateAllPairs(queries,labels,discardWeakConstraints)
+    allPairs = zeros(numel(queries)^2,2);
+    scoreDiffs = zeros(numel(queries)^2,1);
     allPairsIndex = 1;
     beginIndex = 1;
     endIndex = 1;
@@ -324,12 +335,18 @@ function [allPairs,scoreDiffs] = generateAllPairs(queries,labels)
         end
         for i=beginIndex:endIndex
             for j=i+1:endIndex
+                
                 allPairs(allPairsIndex,:) = [i j];
-                scoreDiffs(allPairsIndex,:) = labels(i) - labels(j);
+                scoreDiffs(allPairsIndex) = labels(i) - labels(j);
+                if discardWeakConstraints && scoreDiffs(allPairsIndex) == 0
+                    continue;
+                end
                 allPairsIndex = allPairsIndex + 1;
             end
         end
         beginIndex = endIndex+1;
         endIndex = beginIndex+1;
     end
+    allPairs = allPairs(1:allPairsIndex-1,:);
+    scoreDiffs = scoreDiffs(1:allPairsIndex-1,:);
 end
