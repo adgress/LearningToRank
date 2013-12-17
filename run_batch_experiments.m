@@ -29,7 +29,7 @@ function [] = run_batch_experiments(configFile)
             fprintf(fid,'%s\n',train_name);
             test_name = ['test_name=' inputDirs{j} '/test.' names{j}];
             fprintf(fid,'%s\n',test_name);
-            fprintf(fid,'output_dir=%s\n',output_dir);
+            fprintf(fid,'output_dir=%s\n',[output_dir '/test_on' names{j} '/']);
             %fprintf(fid,'%results_file=\n',results_file);
             fprintf(fid,'learner=%d\n',learner);
             fprintf(fid,'input_dir_2=\n');
@@ -38,6 +38,7 @@ function [] = run_batch_experiments(configFile)
             fclose(fid);
             run_experiment(configFile);
             delete(configFile);
-        end
+            break;
+        end        
     end
 end
