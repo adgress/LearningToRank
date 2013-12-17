@@ -7,8 +7,7 @@ function [] = run_batch_experiments(configFile)
     numColumns = eval(input('num_quj_columns'));
     split = split_string(configFile,'/');
     configDirectory = [split{1} '/' split{2} '/'];
-    output_dir = (input('output_dir'));
-    learnerName = get_learner_name(input);
+    output_dir = (input('output_dir'));    
     learner = input('learner');
     input_dir = '../';
     mkdir(configDirectory);
@@ -21,6 +20,7 @@ function [] = run_batch_experiments(configFile)
                 continue;
             end
             %}
+            learnerName = get_learner_name(input);
             configFile = [configDirectory names{i} '_to_' names{j} '_' learnerName '.cfg'];
             
             fid = fopen(configFile,'w');

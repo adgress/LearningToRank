@@ -65,18 +65,23 @@ function [ndcg var_ndcg] = run_saved_experiment(...
     
 
     if matlabpool('size') < 4
-        matlabpool(4);
+        matlabpool;
     end    
     tic;
     
-    discardWeakConstraints = true;
-    [allPairs,scoreDiffs] = generateAllPairs(queries,labels,discardWeakConstraints);
+    [allPairs,scoreDiffs] = generateAllPairs(queries,labels);
+    strongPairs = allPairs(scoreDiffs ~= 0,:);
+    strongDiffs = scoreDiffs(scoreDiffs ~= 0);
+    weakPairs = allPairs(scoreDiffs == 0,:);
     trainSetPerms = cell(iterations,1);    
+    trainSetPerms_weak = cell(iterations,1);    
     for j=1:iterations
-        trainSetPerms{j} = randperm(stream,size(allPairs, 1));
+        trainSetPerms{j} = randperm(stream,size(strongPairs, 1));
+        trainSetPerms_weak{j} = randperm(stream,size(weakPairs, 1));
     end
     %for k = 1:length(perTrainArray)
     numPairsArray = eval(eval(input('num_pairs')));
+    weak_to_add = input('weak_to_add');
     for k = 1:length(numPairsArray);
         disp(strcat('perTrainArray index ', int2str(k)))
         tempNDCG = zeros(iterations,1); 
@@ -86,6 +91,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
             parfor j = 1:iterations            
                 disp(strcat('iteration ', int2str(j)))               
                 trainSetPerm = trainSetPerms{j}; 
+                trainSetPerm_weak = trainSetPerms_weak{j};
                 %{
                 trainSetX = features(trainSetPerm(1:numTrain), :);
                 trainSetY = labels(trainSetPerm(1:numTrain));
@@ -98,8 +104,13 @@ function [ndcg var_ndcg] = run_saved_experiment(...
                 %}
                 
                 
-                trainingPairs = allPairs(trainSetPerm(1:numPairs),:); %#ok<PFBNS>
-                scoreDiffsUsed = scoreDiffs(trainSetPerm(1:numPairs));
+                strongPairsUsed = strongPairs(trainSetPerm(1:numPairs),:);
+                strongDiffsUsed = strongDiffs(trainSetPerm(1:numPairs));
+                weakPairsUsed = weakPairs(trainSetPerm_weak(1:weak_to_add),:);
+                weakDiffsUsed = zeros(size(weakPairsUsed,1),1);
+                trainingPairs = [strongPairsUsed ; weakPairsUsed];
+                scoreDiffsUsed = [strongDiffsUsed ;weakDiffsUsed];
+                
                 [instancesUsed,I] = sort(unique(trainingPairs(:)),'ascend');
                 mapping = sparse(max(instancesUsed),1);
                 mapping(instancesUsed) = I;
@@ -129,6 +140,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
             for j = 1:iterations
                 disp(strcat('iteration ', int2str(j)))               
                 trainSetPerm = trainSetPerms{j};  
+                trainSetPerm_weak = trainSetPerms_weak{j};
                 
                 %{
                 trainSetX = features(trainSetPerm(1:numTrain), :);
@@ -140,8 +152,14 @@ function [ndcg var_ndcg] = run_saved_experiment(...
                     testSetX,testSetY,testQueries,testSetMap,input,numTrain,stream,flag,rank);
                 %}
                 
-                trainingPairs = allPairs(trainSetPerm(1:numPairs),:);
-                scoreDiffsUsed = scoreDiffs(trainSetPerm(1:numPairs));
+                
+                strongPairsUsed = strongPairs(trainSetPerm(1:numPairs),:);
+                strongDiffsUsed = strongDiffs(trainSetPerm(1:numPairs));
+                weakPairsUsed = weakPairs(trainSetPerm_weak(1:weak_to_add),:);
+                weakDiffsUsed = zeros(size(weakPairsUsed,1),1);
+                trainingPairs = [strongPairsUsed ; weakPairsUsed];
+                scoreDiffsUsed = [strongDiffsUsed ;weakDiffsUsed];
+                
                 [instancesUsed,I] = sort(unique(trainingPairs(:)),'ascend');
                 mapping = sparse(max(instancesUsed),1);
                 mapping(instancesUsed) = I;
@@ -323,7 +341,7 @@ function [meanNDCG] = runSingleIteration(trainSetX,trainSetY,O,S,...
     meanNDCG = mean(cell2mat(values(iterationNDCG)));
 end
 
-function [allPairs,scoreDiffs] = generateAllPairs(queries,labels,discardWeakConstraints)
+function [allPairs,scoreDiffs] = generateAllPairs(queries,labels)
     allPairs = zeros(numel(queries)^2,2);
     scoreDiffs = zeros(numel(queries)^2,1);
     allPairsIndex = 1;
@@ -334,13 +352,9 @@ function [allPairs,scoreDiffs] = generateAllPairs(queries,labels,discardWeakCons
             endIndex = endIndex + 1;
         end
         for i=beginIndex:endIndex
-            for j=i+1:endIndex
-                
+            for j=i+1:endIndex   
                 allPairs(allPairsIndex,:) = [i j];
                 scoreDiffs(allPairsIndex) = labels(i) - labels(j);
-                if discardWeakConstraints && scoreDiffs(allPairsIndex) == 0
-                    continue;
-                end
                 allPairsIndex = allPairsIndex + 1;
             end
         end
