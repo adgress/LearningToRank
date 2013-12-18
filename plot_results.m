@@ -1,4 +1,7 @@
-function [] = plot_results(allResults)
+function [] = plot_results(allResults,showLegend)
+    if nargin < 2
+        showLegend = true;
+    end
     hold on   
     leg = {};
     symbols = {'.','+','v','x'};
@@ -17,9 +20,11 @@ function [] = plot_results(allResults)
         average_ndcgs_var = var(ndcgs,0,2);
         errorbar(sampling_rates,average_ndcgs,average_ndcgs_var,...
             'color',colors(i,:));
-        leg{i} = learner;
+        leg{i} = strrep(learner,'_',' ');
     end
-    legend(leg);
+    if showLegend
+        legend(leg);
+    end
     %xlabel('Sampling Rate','FontSize',8);    
     xlabel('Number of Constraints','FontSize',8);
     ylabel('Average NDCG','FontSize',8);

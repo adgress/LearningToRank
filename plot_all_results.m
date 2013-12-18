@@ -9,37 +9,39 @@ function [] = plot_all_results()
         testName = dataSetNames{index};
         resultsDirectories = testDirectories{index};
     else
-        index = 1;
+        index = 4;
+        C = '.01';
         dataSetNames = {'answers','local','news','shopping'};
         testName = dataSetNames{index};
-        common4Directory = ['common4/test_on_' testName '/C=1'];
+        common4Directory = ['common4/test_on_' testName '/C=' C ];
         %resultsDir = 'results_just-strong_whiten/';
-        %resultsDir = 'results_just-strong_whiten_large-data/';
-        resultsDir = 'results/';
+        resultsDir = 'results_just-strong_percent-weak-added/';
+        %resultsDir = 'results_just-strong_percent-weaken-used';
         common4Directory = [resultsDir '/' common4Directory];
     end
     fig = figure;
+    startI = 2;
     if plotCommon4Data
         numPlots = numel(dataSetNames);
-        for i=1:numPlots
+        for i=startI:numPlots
             prefix = [dataSetNames{i} '_to_' testName];
             subplot(1,numPlots,i);
             subplotTitle = ['Train=' dataSetNames{i} ',Test=' testName];
             title(subplotTitle);
-            plot_results_in_directory(common4Directory,prefix);
+            plot_results_in_directory(common4Directory,prefix,i==startI);
         end
     else 
         numPlots = numel(dataSetNames);
-        for i=1:numel(dataSetNames)
+        for i=startI:numel(dataSetNames)
             subplot(1,numPlots,i);  
             subplotTitle = ['Train=' dataSetNames{i} ',Test=' testName];
             title(subplotTitle);
-            plot_results_in_directory(resultsDirectories{i});
+            plot_results_in_directory(resultsDirectories{i},i==startI);
         end        
     end
-    subplot(1,numPlots,1);
+    subplot(1,numPlots,startI);
     v = axis;
-    for i=2:numPlots
+    for i=startI+1:numPlots
         subplot(1,numPlots,i);
         v2 = axis;
         v(1) = min(v(1),v2(1));

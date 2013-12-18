@@ -1,7 +1,10 @@
-function [] = plot_results_in_directory(path,prefix)
+function [] = plot_results_in_directory(path,prefix,showLegend)
     if nargin < 2
         prefix = '';
     end    
+    if nargin < 2
+        showLegend = true;
+    end
     files = dir(path);    
     allResults = {};
     for i=1:numel(files)
@@ -20,5 +23,5 @@ function [] = plot_results_in_directory(path,prefix)
         end
         allResults{end+1} = x.results;
     end
-    plot_results(allResults);
+    plot_results(allResults,showLegend);
 end
