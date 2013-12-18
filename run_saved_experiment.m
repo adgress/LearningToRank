@@ -83,13 +83,13 @@ function [ndcg var_ndcg] = run_saved_experiment(...
     numPairsArray = eval(eval(input('num_pairs')));
     weak_to_add = input('weak_to_add');
     percent_weak_to_add = input('percent_weak_to_add');
+    percent_weak_to_use = input('percent_weak_to_use');
     for k = 1:length(numPairsArray);
         disp(strcat('perTrainArray index ', int2str(k)))
         tempNDCG = zeros(iterations,1); 
         %numTrain = floor(size(features, 1) * perTrainArray(k));                
         numPairs = numPairsArray(k);        
-        if input('usePar')
-            
+        if input('usePar')            
             parfor j = 1:iterations            
                 disp(strcat('iteration ', int2str(j)))               
                 trainSetPerm = trainSetPerms{j}; 
@@ -104,10 +104,11 @@ function [ndcg var_ndcg] = run_saved_experiment(...
                 tempNDCG(j) = runSingleIteration(trainSetX,trainSetY,O,S,...
                     testSetX,testSetY,testQueries,testSetMap,input,numTrain,stream,flag,rank);
                 %}
-                num_weak_pairs = weak_to_add + ceil(numPairs*percent_weak_to_add);
-                num_weak_pairs = min(size(trainSetPerm_weak,1),num_weak_pairs);
-                strongPairsUsed = strongPairs(trainSetPerm(1:numPairs),:);
-                strongDiffsUsed = strongDiffs(trainSetPerm(1:numPairs));
+                num_weak_pairs = weak_to_add + ceil(numPairs*percent_weak_to_add)...
+                    + ceil(numPairs*percent_weak_to_use);
+                num_weak_pairs = min(size(weakPairs,1),num_weak_pairs);
+                strongPairsUsed = strongPairs(trainSetPerm(1:ceil((1-percent_weak_to_use)*numPairs)),:);
+                strongDiffsUsed = strongDiffs(trainSetPerm(1:ceil((1-percent_weak_to_use)*numPairs)));
                 weakPairsUsed = weakPairs(trainSetPerm_weak(1:num_weak_pairs),:);
                 weakDiffsUsed = zeros(size(weakPairsUsed,1),1);
                 trainingPairs = [strongPairsUsed ; weakPairsUsed];
@@ -153,10 +154,11 @@ function [ndcg var_ndcg] = run_saved_experiment(...
                 tempNDCG(j) = runSingleIteration(trainSetX,trainSetY,O,S,...
                     testSetX,testSetY,testQueries,testSetMap,input,numTrain,stream,flag,rank);
                 %}
-                num_weak_pairs = weak_to_add + ceil(numPairs*percent_weak_to_add);
-                num_weak_pairs = min(size(trainSetPerm_weak,1),num_weak_pairs);
-                strongPairsUsed = strongPairs(trainSetPerm(1:numPairs),:);
-                strongDiffsUsed = strongDiffs(trainSetPerm(1:numPairs));
+                num_weak_pairs = weak_to_add + ceil(numPairs*percent_weak_to_add)...
+                    + ceil(numPairs*percent_weak_to_use);
+                num_weak_pairs = min(size(weakPairs,1),num_weak_pairs);
+                strongPairsUsed = strongPairs(trainSetPerm(1:ceil((1-percent_weak_to_use)*numPairs)),:);
+                strongDiffsUsed = strongDiffs(trainSetPerm(1:ceil((1-percent_weak_to_use)*numPairs)));
                 
                 weakPairsUsed = weakPairs(trainSetPerm_weak(1:num_weak_pairs),:);
                 weakDiffsUsed = zeros(size(weakPairsUsed,1),1);

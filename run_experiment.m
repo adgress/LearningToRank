@@ -11,14 +11,17 @@ function [] = run_experiment(configFile)
     cArray = eval(eval(input('C')));
     weak_to_addArray = eval(eval(input('weak_to_add')));
     percent_weak_to_addArray = eval(eval(input('percent_weak_to_add')));
+    percent_weak_to_useArray = eval(eval(input('percent_weak_to_use')));
     for weak_to_add = weak_to_addArray
     for percent_weak_to_add = percent_weak_to_addArray
+    for percent_weak_to_use = percent_weak_to_useArray
     for C = cArray
         inputClone = input;
         inputClone('C') = C;
         inputClone('weak_to_add') = weak_to_add;
         inputClone('percent_weak_to_add') = percent_weak_to_add;
-        assert(~(weak_to_add > 0 && percent_weak_to_add > 0));
+        inputClone('percent_weak_to_use') = percent_weak_to_use;
+        %assert(~(weak_to_add > 0 && percent_weak_to_add > 0));
         inputClone('results_file') = make_result_file_name(inputClone,cfgName);
         run_experiments(input('input_dir'), input('train_name'), ...
             input('test_name'), input('num_train_test_splits'), ...
@@ -27,6 +30,7 @@ function [] = run_experiment(configFile)
             input('results_file'), input('learner'), input('input_dir_2'), ...
             input('train_name_2'), input('test_name_2'), input('cvx_path'), ...
             inputClone);
+    end
     end
     end
     end
