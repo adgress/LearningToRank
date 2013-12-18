@@ -27,4 +27,7 @@ function [param_string] = make_param_string(input)
     if input('weak_to_add') > 0
         param_string = [param_string ',num_weak=' num2str(input('weak_to_add'))];
     end
+    if input('percent_weak_to_add') > 0
+        param_string = [param_string ',percent_weak_added=' num2str(input('percent_weak_to_add'))];
+    end
 end

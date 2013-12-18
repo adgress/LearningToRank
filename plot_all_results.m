@@ -1,8 +1,8 @@
 function [] = plot_all_results()
-    plotCommon4Data = false;
+    plotCommon4Data = true;
 
     if ~plotCommon4Data
-        index = 2;
+        index = 1;        
         testDirectories = {{'results/local_common','results/news_to_local'},...
             {'results/local_to_news','results/news_common'}};    
         dataSetNames = {'local','news'};
@@ -12,7 +12,11 @@ function [] = plot_all_results()
         index = 1;
         dataSetNames = {'answers','local','news','shopping'};
         testName = dataSetNames{index};
-        common4Directory = ['results/common4/test_on_' testName '/'];
+        common4Directory = ['common4/test_on_' testName '/C=1'];
+        %resultsDir = 'results_just-strong_whiten/';
+        %resultsDir = 'results_just-strong_whiten_large-data/';
+        resultsDir = 'results/';
+        common4Directory = [resultsDir '/' common4Directory];
     end
     fig = figure;
     if plotCommon4Data

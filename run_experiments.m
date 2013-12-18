@@ -64,9 +64,10 @@ function [] = run_experiments(input_dir, train_name, test_name, ...
                                        learner, iterations,input);
             results(strcat('ndcg_', i_str)) = temp_ndcg;
             results(strcat('var_', i_str)) = temp_var;
-        end;        
+        end
     end
     mkdir(output_dir);
+    results('input') = input;
     save(strcat(output_dir, results_file_name), 'results')
     if input('learner') == ALTR_MULTI
         save(strcat(output_dir, ['test1_' results_file_name]), 'results1')
