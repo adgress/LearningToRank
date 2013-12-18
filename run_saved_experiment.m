@@ -94,7 +94,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
             parfor j = 1:iterations            
                 disp(strcat('iteration ', int2str(j)))               
                 trainSetPerm = trainSetPerms{j}; 
-                trainSetPerm_weak = trainSetPerms_weak{j};
+                trainSetPerm_weak = min(trainSetPerms_weak{j}, size(weakPairs,1));
                 %{
                 trainSetX = features(trainSetPerm(1:numTrain), :);
                 trainSetY = labels(trainSetPerm(1:numTrain));
