@@ -94,7 +94,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
             parfor j = 1:iterations            
                 disp(strcat('iteration ', int2str(j)))               
                 trainSetPerm = trainSetPerms{j}; 
-                trainSetPerm_weak = min(trainSetPerms_weak{j}, size(weakPairs,1));
+                trainSetPerm_weak = trainSetPerms_weak{j};
                 %{
                 trainSetX = features(trainSetPerm(1:numTrain), :);
                 trainSetY = labels(trainSetPerm(1:numTrain));
@@ -106,7 +106,7 @@ function [ndcg var_ndcg] = run_saved_experiment(...
                     testSetX,testSetY,testQueries,testSetMap,input,numTrain,stream,flag,rank);
                 %}
                 
-                
+                num_weak_pairs = min(size(trainSetPerm_weak,1),num_weak_pairs);
                 strongPairsUsed = strongPairs(trainSetPerm(1:numPairs),:);
                 strongDiffsUsed = strongDiffs(trainSetPerm(1:numPairs));
                 weakPairsUsed = weakPairs(trainSetPerm_weak(1:num_weak_pairs),:);
