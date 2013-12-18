@@ -64,7 +64,9 @@ function [ndcg var_ndcg] = run_saved_experiment(...
     stream = RandStream('mt19937ar','Seed',10);
     
 
-    if matlabpool('size') < 4
+    if matlabpool('size') < 1
+        %Fix for laptop
+        distcomp.feature( 'LocalUseMpiexec', false );
         matlabpool;
     end    
     tic;

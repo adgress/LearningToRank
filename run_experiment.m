@@ -5,7 +5,11 @@ function [] = run_experiment(configFile)
     split = split_string(configFile,'/');
     directory = split{end-1};
     cfgName = get_cfg_name(configFile);
-    input('output_dir') = ['./results/' directory '/'];    
+    
+    [trainName,testName] = get_train_test_names(input);
+    input('train_name_display') = trainName;
+    input('test_name_display') = testName;
+    input('output_dir') = ['./results/' directory '/' 'test_on_' testName '/'];            
     
     mkdir(input('output_dir'));
     cArray = eval(eval(input('C')));
@@ -21,8 +25,13 @@ function [] = run_experiment(configFile)
         inputClone('weak_to_add') = weak_to_add;
         inputClone('percent_weak_to_add') = percent_weak_to_add;
         inputClone('percent_weak_to_use') = percent_weak_to_use;
-        %assert(~(weak_to_add > 0 && percent_weak_to_add > 0));
-        inputClone('results_file') = make_result_file_name(inputClone,cfgName);
+        resultsFile = make_result_file_name(inputClone,cfgName);
+        inputClone('results_file') = resultsFile;
+                 
+        if exist([input('output_dir') '/' resultsFile],'file')
+            fprintf(['Skipping:' resultsFile 'already exists\n']);
+            continue;
+        end
         run_experiments(input('input_dir'), input('train_name'), ...
             input('test_name'), input('num_train_test_splits'), ...
             input('iterations'), input('ndcg_rank'), ...
@@ -36,15 +45,22 @@ function [] = run_experiment(configFile)
     end
 end
 
+function [trainName, testName] = get_train_test_names(input)
+    trainName = split_string(input('train_name'),'.');
+    trainName = trainName{2};
+    testName = split_string(input('test_name'),'.');
+    testName = testName{2};
+end
+
 function [result_file_name] = make_result_file_name(input,cfgName)
     loadConstants();
     param_string = make_param_string(input);
     result_file_name = [cfgName param_string '.mat'];
 end
 
-function [name] = get_cfg_name(configFile)
+function [configName] = get_cfg_name(configFile)
     split = split_string(configFile,'/');
-    name = split_string(split{end},'.');
-    name = split_string(name{1},',');
-    name = name{1};
+    configName = split_string(split{end},'.');
+    configName = split_string(configName{1},',');
+    configName = configName{1};
 end

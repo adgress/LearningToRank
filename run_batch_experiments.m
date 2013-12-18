@@ -12,15 +12,8 @@ function [] = run_batch_experiments(configFile)
     input_dir = '../';
     mkdir(configDirectory);
     for i=1:numel(inputDirs)
-        for j=1:numel(inputDirs)
-            %{
-            results_file = [names{i} '_to_' names{j} '_' learnerName '.mat']
-            if exist(results_file,'file')
-                fprintf(['Skipping:' results_file 'already exists']);
-                continue;
-            end
-            %}
-            learnerName = get_learner_name(input);
+        for j=1:numel(inputDirs)  
+            learnerName = get_learner_name(input);                     
             configFile = [configDirectory names{i} '_to_' names{j} '_' learnerName '.cfg'];
             
             fid = fopen(configFile,'w');
@@ -38,7 +31,7 @@ function [] = run_batch_experiments(configFile)
             fclose(fid);
             run_experiment(configFile);
             delete(configFile);
-            break;
+            %break;
         end        
     end
 end
