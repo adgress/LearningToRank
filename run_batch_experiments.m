@@ -11,8 +11,12 @@ function [] = run_batch_experiments(configFile)
     learner = input('learner');
     input_dir = '../';
     mkdir(configDirectory);
+    runTransfer = input('runBatchTransfer');
     for i=1:numel(inputDirs)
         for j=1:numel(inputDirs)  
+            if i ~= j && ~runTransfer
+                continue;
+            end
             learnerName = get_learner_name(input);                     
             configFile = [configDirectory names{i} '_to_' names{j} '_' learnerName '.cfg'];
             

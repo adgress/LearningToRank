@@ -9,7 +9,8 @@ function [] = run_experiment(configFile)
     [trainName,testName] = get_train_test_names(input);
     input('train_name_display') = trainName;
     input('test_name_display') = testName;
-    input('output_dir') = ['./results/' directory '/' 'test_on_' testName '/'];            
+    %input('output_dir') = ['./results/' directory '/' 'test_on_' testName '/'];            
+    input('output_dir') = ['./results/' directory '/'];
     
     mkdir(input('output_dir'));
     cArray = eval(eval(input('C')));

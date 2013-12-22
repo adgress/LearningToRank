@@ -207,10 +207,13 @@ function [meanNDCG] = runSingleIteration(trainSetX,trainSetY,O,S,...
     sigma = input('sigma');
     iterationNDCG = containers.Map();
     if input('whiten')
+        centeringMatrix = repmat(mean(trainSetX),size(trainSetX,1),1);
+        trainSetX = trainSetX - centeringMatrix;
+        testSetX = testSetX - repmat(mean(trainSetX),size(testSetX,1),1);
         Cxx = cov(trainSetX);
         Cxx = Cxx + .001*eye(size(Cxx));
         Cxx_inv = pinv(Cxx);
-        T = sqrtm(Cxx_inv);
+        T = sqrtm(Cxx_inv);        
         whitenedTrainX = trainSetX*T;
         whitenedTestX = testSetX*T;
         trainSetX = whitenedTrainX;
