@@ -14,7 +14,7 @@ function [] = plot_results_matching_query(resultsDir,queries)
             query('test_name_display') = {dataSets{i}};
             query('percent_weak_to_use') = {0};
             query('percent_weak_to_add') = {0};
-            query('whiten') = {0,1};
+            query('whiten') = {0};
             queries{i} = query;
         end
         

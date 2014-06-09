@@ -57,8 +57,8 @@ function [m,v] = get_mean_and_variance(results,numPairs)
         val = results(key);
         values(:,i) = val;
     end
-    allMeans = mean(values);
-    allVars = var(values);
+    allMeans = mean(values');
+    allVars = var(values');
     assert(sum(allNumPairs==numPairs) == 1);
     m = allMeans(allNumPairs==numPairs);
     v = allVars(allNumPairs==numPairs);
